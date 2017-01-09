@@ -4,7 +4,7 @@
 \alias{fviz_silhouette}
 \title{Visualize Silhouette Information from Clustering}
 \usage{
-fviz_silhouette(sil.obj, label = FALSE, print.summary = TRUE)
+fviz_silhouette(sil.obj, label = FALSE, print.summary = TRUE, ...)
 }
 \arguments{
 \item{sil.obj}{an object of class silhouette: pam, clara, fanny [in cluster 
@@ -14,6 +14,8 @@ package]; eclust and hcut [in factoextra].}
 
 \item{print.summary}{logical value. If true a summary of cluster silhouettes 
 are printed in fviz_silhouette().}
+
+\item{...}{other arguments to be passed to the function ggpubr::ggpar().}
 }
 \value{
 return a ggplot
@@ -53,10 +55,10 @@ iris.scaled <- scale(iris[, -5])
 
 # K-means clustering
 # +++++++++++++++++++++
-km.res <- kmeans(iris.scaled, 3, nstart = 25)
+km.res <- kmeans(iris.scaled, 3, nstart = 2)
 
 # Visualize kmeans clustering
-fviz_cluster(km.res, iris[, -5], frame.type = "norm")+
+fviz_cluster(km.res, iris[, -5], ellipse.type = "norm")+
 theme_minimal()
 
 # Visualize silhouhette information
@@ -67,13 +69,13 @@ fviz_silhouette(sil)
 # Identify observation with negative silhouette
 neg_sil_index <- which(sil[, "sil_width"] < 0)
 sil[neg_sil_index, , drop = FALSE]
-
+\dontrun{
 # PAM clustering
 # ++++++++++++++++++++
 require(cluster)
 pam.res <- pam(iris.scaled, 3)
 # Visualize pam clustering
-fviz_cluster(pam.res, frame.type = "norm")+
+fviz_cluster(pam.res, ellipse.type = "norm")+
 theme_minimal()
 # Visualize silhouhette information
 fviz_silhouette(pam.res)
@@ -86,7 +88,7 @@ hc.cut <- hcut(iris.scaled, k = 3, hc_method = "complete")
 fviz_dend(hc.cut, show_labels = FALSE, rect = TRUE)
 # Visualize silhouhette information
 fviz_silhouette(hc.cut)
-
+}
 }
 \author{
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}

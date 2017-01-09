@@ -51,10 +51,9 @@ NULL
 #' @rdname get_ca
 #' @export 
 get_ca <- function(res.ca, element = c("row", "col")){
- elmt <- element[1]
+ elmt <- match.arg(element)
  if(elmt =="row") get_ca_row(res.ca)
  else if(elmt == "col") get_ca_col(res.ca)
- else stop("Allowed values for the argument element are: 'row' or 'col'.")
 }
 
 
@@ -110,10 +109,31 @@ get_ca_col <- function(res.ca){
     }
     coord <- res.ca$co
     inertia <- ade4::inertia.dudi(res.ca, row.inertia = FALSE, col.inertia = TRUE)
-    cos2 <- abs(inertia$col.rel/10000)[, colnames(coord)]
-    contrib <- (inertia$col.abs/100)[, colnames(coord)]
+    vv <- as.character(utils::packageVersion("ade4"))
+    cc <- utils::compareVersion(vv, "1.7.4") > 0
+    if(cc){
+      # "v>1.7.4"
+      cos2 <- abs(inertia$col.rel/100)[, 1:ncol(coord)]
+      contrib <- (inertia$col.abs)[, 1:ncol(coord)]
+    }
+    # v<=1.7.4
+    else {
+    cos2 <- abs(inertia$col.rel/10000)[, 1:ncol(coord)]
+    contrib <- (inertia$col.abs/100)[, 1:ncol(coord)]
+    }
     colnames(coord) <- colnames(cos2) <- colnames(contrib) <- paste0("Dim.", 1:ncol(coord)) 
     cols <- list(coord = coord, contrib = contrib, cos2 = cos2, inertia = NA)
+  }
+  # ExPosition package
+  else if (inherits(res.ca, "expoOutput") & inherits(res.ca$ExPosition.Data,'epCA')) {
+    coord <- res.ca$ExPosition.Data$fj
+    inertia <- res.ca$ExPosition.Data$dj*res.ca$ExPosition.Data$W
+    cos2 <- res.ca$ExPosition.Data$rj
+    contrib <- res.ca$ExPosition.Data$cj*100
+    colnames(coord) <- colnames(cos2) <- colnames(contrib) <- paste0("Dim.", 
+                                                                     1:ncol(coord))
+    cols <- list(coord = coord, contrib = contrib, cos2 = cos2, 
+                 inertia = inertia)
   }
   
   else stop("An object of class : ", class(res.ca), 
@@ -176,10 +196,31 @@ get_ca_row <- function(res.ca){
     }
     coord <- res.ca$li
     inertia <- ade4::inertia.dudi(res.ca, row.inertia = TRUE, col.inertia = FALSE)
-    cos2 <- abs(inertia$row.rel/10000)[, colnames(coord)]
-    contrib <- (inertia$row.abs/100)[, colnames(coord)]
+    vv <- as.character(utils::packageVersion("ade4"))
+    cc <- utils::compareVersion(vv, "1.7.4") > 0
+    if(cc){
+      # "v>1.7.4"
+      cos2 <- abs(inertia$row.rel/100)[, 1:ncol(coord)]
+      contrib <- (inertia$row.abs)[, 1:ncol(coord)]
+    }
+    # v<=1.7.4
+    else {
+      cos2 <- abs(inertia$row.rel/10000)[, 1:ncol(coord)]
+      contrib <- (inertia$row.abs/100)[, 1:ncol(coord)]
+    }
     colnames(coord) <- colnames(cos2) <- colnames(contrib) <- paste0("Dim.", 1:ncol(coord)) 
     row <- list(coord = coord, contrib = contrib, cos2 = cos2, inertia = NA)
+  }
+  # ExPosition package
+  else if (inherits(res.ca, "expoOutput") & inherits(res.ca$ExPosition.Data,'epCA')) {
+    coord <- res.ca$ExPosition.Data$fi
+    inertia <- res.ca$ExPosition.Data$di*res.ca$ExPosition.Data$M
+    cos2 <- res.ca$ExPosition.Data$ri
+    contrib <- res.ca$ExPosition.Data$ci*100
+    colnames(coord) <- colnames(cos2) <- colnames(contrib) <- paste0("Dim.", 
+                                                                     1:ncol(coord))
+    row <- list(coord = coord, contrib = contrib, cos2 = cos2, 
+                inertia = inertia)
   }
   else stop("An object of class : ", class(res.ca), 
             " can't be handled by the function get_ca_row()")

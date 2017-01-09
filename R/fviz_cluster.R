@@ -1,51 +1,55 @@
 #' @include eigenvalue.R get_pca.R hcut.R
  NULL
 #'Visualize Clustering Results
-#'@description Provides ggplot2-based elegant visualization of partitioning
-#'methods including kmeans [stats package]; pam, clara and fanny [cluster
-#'package]; dbscan [fpc package]; Mclust [mclust package]; HCPC [FactoMineR];
-#'hkmeans [factoextra]. Observations are represented by points in the plot,
-#'using principal components if ncol(data) > 2. An ellipse is drawn around each
-#'cluster.
-#'@param object an object of class "partition" created by the functions pam(),
+#'@description Provides ggplot2-based elegant visualization of partitioning 
+#'  methods including kmeans [stats package]; pam, clara and fanny [cluster 
+#'  package]; dbscan [fpc package]; Mclust [mclust package]; HCPC [FactoMineR]; 
+#'  hkmeans [factoextra]. Observations are represented by points in the plot, 
+#'  using principal components if ncol(data) > 2. An ellipse is drawn around 
+#'  each cluster.
+#'@param object an object of class "partition" created by the functions pam(), 
 #'  clara() or fanny() in cluster package; "kmeans" [in stats package]; "dbscan"
 #'  [in fpc package]; "Mclust" [in mclust]; "hkmeans", "eclust" [in factoextra].
 #'  Possible value are also any list object with data and cluster components 
 #'  (e.g.: object = list(data = mydata, cluster = myclust)).
-#'@param data the data that has been used for clustering. Required only when
+#'@param data the data that has been used for clustering. Required only when 
 #'  object is a class of kmeans or dbscan.
-#'@param stand logical value; if TRUE, data is standardized before principal
+#' @param choose.vars a character vector containing variables to be considered for plotting.
+#'@param stand logical value; if TRUE, data is standardized before principal 
 #'  component analysis
-#'@param geom a text specifying the geometry to be used for the graph. Allowed
-#'  values are the combination of c("point", "text"). Use "point" (to show only
+#'@param geom a text specifying the geometry to be used for the graph. Allowed 
+#'  values are the combination of c("point", "text"). Use "point" (to show only 
 #'  points);  "text" to show only labels; c("point", "text") to show both types.
-#' @param repel a boolean, whether to use ggrepel to avoid overplotting text 
-#'   labels or not.
+#'@param repel a boolean, whether to use ggrepel to avoid overplotting text 
+#'  labels or not.
 #'@param show.clust.cent logical; if TRUE, shows cluster centers
-#'@param frame logical value; if TRUE, draws outline around points of each
-#'  cluster
-#'@param frame.type Character specifying frame type. Possible values are
-#'  'convex' or types supporeted by \code{ggplot2::stat_ellipse} including one
-#'  of c("t", "norm", "euclid").
-#'@param frame.level Passed for \code{ggplot2::stat_ellipse} 's level. Ignored
-#'  in 'convex'. Default value is 0.95.
-#'@param frame.alpha Alpha for frame specifying the transparency level of fill
-#'  color.
+#'@param ellipse logical value; if TRUE, draws outline around points of 
+#'  each cluster
+#'@param ellipse.type Character specifying frame type. Possible 
+#'  values are 'convex', 'confidence' or types supported by 
+#'  \code{\link[ggplot2]{stat_ellipse}} including one of c("t", "norm", 
+#'  "euclid").
+#'@param ellipse.level the size of the concentration ellipse in 
+#'  normal probability. Passed for \code{ggplot2::stat_ellipse} 's level. 
+#'  Ignored in 'convex'. Default value is 0.95.
+#'@param ellipse.alpha Alpha for frame specifying the transparency 
+#'  level of fill color. Use alpha = 0 for no fill color.
 #'@param labelsize font size for the labels
+#'@param shape the shape of points. 
 #'@param pointsize the size of points
-#'@param title the title of the graph
-#'@param jitter a parameter used to jitter the points in order to reduce
-#'  overplotting. It's a list containing the objects what, width and height (i.e
-#'  jitter = list(what, width, height)). \itemize{ \item what: the element to be
-#'  jittered. Possible values are "point" or "p"; "label" or "l"; "both" or "b".
-#'  \item width: degree of jitter in x direction \item height: degree of jitter
-#'  in y direction }
 #'@param outlier.color,outlier.shape the color and the shape of outliers. 
 #'  Outliers can be detected only in DBSCAN clustering.
+#'@param main plot main title.
+#'@param xlab,ylab character vector specifying x and y axis labels, 
+#'  respectively. Use xlab = FALSE and ylab = FALSE to hide xlab and ylab, 
+#'  respectively.
+#'@inheritParams ggpubr::ggpar
+#'@param ... other arguments to be passed to the functions
+#'  \code{\link[ggpubr]{ggscatter}} and \code{\link[ggpubr]{ggpar}}.
 #'  
 #'@return return a ggpplot.
 #'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
-#'@seealso \code{\link{fviz_silhouette}}, \code{\link{hcut}},
+#'@seealso \code{\link{fviz_silhouette}}, \code{\link{hcut}}, 
 #'  \code{\link{hkmeans}},  \code{\link{eclust}}, \code{\link{fviz_dend}}
 #' @examples 
 #' set.seed(123)
@@ -59,18 +63,16 @@
 #' 
 #' # K-means clustering
 #' # +++++++++++++++++++++
-#' km.res <- kmeans(iris.scaled, 3, nstart = 25)
+#' km.res <- kmeans(iris.scaled, 3, nstart = 10)
 #' 
 #' # Visualize kmeans clustering
 #' # use repel = TRUE to avoid overplotting
-#' fviz_cluster(km.res, iris[, -5], frame.type = "norm")
+#' fviz_cluster(km.res, iris[, -5], ellipse.type = "norm")
 #' 
 #' 
-#'# Change the color and theme
-#'fviz_cluster(km.res, iris[, -5]) + 
-#'  scale_color_brewer(palette = "Set2")+
-#'  scale_fill_brewer(palette = "Set2") +
-#'  theme_minimal()
+#'# Change the color palette and theme
+#'fviz_cluster(km.res, iris[, -5],
+#'    palette = "Set2", ggtheme = theme_minimal())
 #'  
 #'  \dontrun{
 #' # Show points only
@@ -83,8 +85,7 @@
 #' require(cluster)
 #' pam.res <- pam(iris.scaled, 3)
 #'  # Visualize pam clustering
-#' fviz_cluster(pam.res, geom = "point", frame.type = "norm")
-#' }
+#' fviz_cluster(pam.res, geom = "point", ellipse.type = "norm")
 #' 
 #' # Hierarchical clustering
 #' # ++++++++++++++++++++++++
@@ -93,21 +94,40 @@
 #' # Visualize dendrogram
 #' fviz_dend(hc.cut, show_labels = FALSE, rect = TRUE)
 #' # Visualize cluster
-#' fviz_cluster(hc.cut, frame.type = "convex")
+#' fviz_cluster(hc.cut, ellipse.type = "convex")
+#' 
+#' }
 #' 
 #'
 #' 
-#' @name fviz_cluster
-#' @rdname fviz_cluster
-#' @export
-fviz_cluster <- function(object, data = NULL, stand = TRUE, 
+#'@name fviz_cluster
+#'@rdname fviz_cluster
+#'@export
+fviz_cluster <- function(object, data = NULL, choose.vars = NULL, stand = TRUE, 
                          geom = c("point", "text"), repel = FALSE,
                          show.clust.cent = TRUE,
-                         frame = TRUE, frame.type = "convex", frame.level = 0.95,
-                         frame.alpha = 0.2,
-                         pointsize = 2, labelsize = 4, title = "Cluster plot",
-                         jitter = list(what = "label", width = NULL, height = NULL),
-                         outlier.color = "black", outlier.shape = 19){
+                         ellipse = TRUE, ellipse.type = "convex", ellipse.level = 0.95,
+                         ellipse.alpha = 0.2,
+                         shape = NULL, pointsize = 1.5, labelsize = 12,
+                         main = "Cluster plot",  xlab = NULL, ylab = NULL,
+                         outlier.color = "black", outlier.shape = 19,
+                         ggtheme = theme_grey(), ...){
+  
+  # Deprecated arguments
+  extra_args <- list(...)
+  
+  if (!is.null(extra_args$jitter)) {
+    warning("argument jitter is deprecated; please use repel = TRUE instead, to avoid overlapping of labels.", 
+            call. = FALSE)
+    if(!is.null(extra_args$jitter$width) | !is.null(extra_args$jitter$height) ) repel = TRUE
+  }
+  
+  if(!is.null(extra_args$frame)) ellipse <- .facto_dep("frame", "ellipse", ellipse)
+  if(!is.null(extra_args$frame.type)) ellipse.type <- .facto_dep("frame.type", "ellipse.type", extra_args$frame.type)
+  if(!is.null(extra_args$frame.level)) ellipse.level <- .facto_dep("frame.level", "ellipse.level", extra_args$frame.level)
+  if(!is.null(extra_args$frame.alpha)) ellipse.alpha <- .facto_dep("frame.alpha", "ellipse.alpha", extra_args$frame.alpha)
+  if(!is.null(extra_args$title)) main <- .facto_dep("title", "main", extra_args$title)
+  
   
   # object from cluster package
   if(inherits(object, c("partition", "hkmeans", "eclust"))) data <- object$data
@@ -122,8 +142,11 @@ fviz_cluster <- function(object, data = NULL, stand = TRUE,
   }
   # HCPC in FactoMineR
   else if(inherits(object, "HCPC")) {
-    data <- object$data.clust[, -ncol(object$data.clust), drop = FALSE]
-    object$cluster <- as.vector(object$data.clust$clust)
+    object$cluster <- res.hcpc$call$X$clust
+    data <- res.hcpc <- object
+    stand <- FALSE # to avoid trying to standardize HCPC results
+#     data <- object$data.clust[, -ncol(object$data.clust), drop = FALSE]
+#     object$cluster <- as.vector(object$data.clust$clust)
   }
   else if(inherits(object, "hcut")){
     if(inherits(object$data, "dist")){
@@ -137,6 +160,10 @@ fviz_cluster <- function(object, data = NULL, stand = TRUE,
     cluster <- object$cluster
   }
   else stop("Can't handle an object of class ", class(object))
+  
+  # Choose variables
+  if(!is.null(choose.vars))
+    data <- data[, choose.vars, drop = FALSE]
   if(stand) data <- scale(data)
   cluster <- as.factor(object$cluster)
   
@@ -149,19 +176,36 @@ fviz_cluster <- function(object, data = NULL, stand = TRUE,
     # ncol(data) > 2 --> PCA
     if(ncol(data)>2){
     pca <- stats::prcomp(data, scale = FALSE, center = FALSE)
-    ind  <- facto_summarize(pca, element = "ind", result = "coord", axes = 1:2)
-    pca_performed = TRUE
+    ind <- facto_summarize(pca, element = "ind", result = "coord", axes = 1:2)
+    eig <- get_eigenvalue(pca)[,2]
+    if(is.null(xlab)) xlab = paste0("Dim", 1, " (", round(eig[1],1), "%)") 
+    if(is.null(ylab)) ylab = paste0("Dim", 2, " (", round(eig[2], 1),"%)")
     }
     # PCA is not performed
     else if(ncol(data) == 2){
       ind <- as.data.frame(data)
       ind <- cbind.data.frame(name = rownames(ind), ind)
+      if(is.null(xlab)) xlab <- colnames(data)[1]
+      if(is.null(ylab)) ylab <- colnames(data)[2]
+      
+      if(xlab=="x") xlab <- "x value"
+      if(ylab == "y") ylab <- "y value"
     }
     else{
       stop("The dimension of the data < 2! No plot.")
     }
     colnames(ind)[2:3] <-  c("x", "y")
     label_coord <- ind
+  }
+  else if(inherits(data, "HCPC")){
+    ind <- res.hcpc$call$X[, c(1, 2, ncol(res.hcpc$call$X))]
+    colnames(ind) <- c("Dim.1", "Dim.2", "clust")
+    ind <- cbind.data.frame(name = rownames(ind), ind)
+    colnames(ind)[2:3] <-  c("x", "y")
+    label_coord <- ind
+    eig <- get_eigenvalue(res.hcpc$call$t$res)[,2]
+    if(is.null(xlab)) xlab = paste0("Dim", 1, " (", round(eig[1],1), "%)") 
+    if(is.null(ylab)) ylab = paste0("Dim", 2, " (", round(eig[2], 1),"%)")
   }
   else stop("A data of class ", class(data), " is not supported.")
   
@@ -170,20 +214,19 @@ fviz_cluster <- function(object, data = NULL, stand = TRUE,
   label = FALSE
   if("text" %in% geom) label = TRUE
   if(!("point" %in% geom)) pointsize = 0
-  if(is.null(jitter$what)) jitter$what <- "label"
- 
-  # Jittering
-  if(jitter$what %in% c("both", "b")) label_coord <- ind <- .jitter(ind, jitter)
-  else if(jitter$what %in% c("point", "p")) ind <- .jitter(ind, jitter)
-  else if(jitter$what %in% c("label", "l")) label_coord <- .jitter(label_coord, jitter)
   
   plot.data <- cbind.data.frame(ind, cluster = cluster)
   label_coord <- cbind.data.frame(label_coord, cluster = cluster)
+  # Augment data
+  if(inherits(object, "Mclust")){
+    plot.data$uncertainty <- object$uncertainty
+    label_coord$uncertainty <- object$uncertainty
+  }
   
   # IF DBSCAN: cluster 0 is outliers. We don't want to make ellipse around
   # these observations. Let's remove them. They will be added to the plot later
   is_outliers = FALSE
-  if(inherits(object, "dbscan")){
+  if(inherits(object, c("dbscan", "Mclust"))){
     outliers <- which(cluster == 0)
     if(length(outliers) > 0){
       is_outliers = TRUE
@@ -199,111 +242,34 @@ fviz_cluster <- function(object, data = NULL, stand = TRUE,
   
   # Plot
   # ++++++++++++++++++++++++
-  ngroups <- length(levels(plot.data$cluster))
-  p <- ggplot()
-  if("point" %in% geom) 
-  {
-    if(ngroups <= 6){
-    p <- p+geom_point(data = plot.data , 
-                      aes_string('x', 'y', color="cluster", shape = "cluster"),
-                      size = pointsize)
-    }
-    else 
-      p <- p+geom_point(data = plot.data , 
-                        aes_string('x', 'y', color="cluster", shape = "cluster"),
-                        size = pointsize) +
-        ggplot2::scale_shape_manual(values=1:ngroups, labels = levels(plot.data$cluster)) 
-        
-  }
+  lab <- NULL
+  if("text" %in% geom) lab <- "name"
+  if(is.null(shape)) shape <- "cluster"
   
-  if("text" %in% geom){
-    if(repel)
-      p <- p +ggrepel::geom_text_repel(data = label_coord, 
-                                       aes_string('x', 'y', label = "name", color="cluster"),
-                                       size = labelsize)
-    else
-      p <- p + geom_text(data = label_coord, 
-                         aes_string('x', 'y', label = 'name', color="cluster"),  
-                         size = labelsize, vjust = -0.7)
-  }
+  if(inherits(object, "partition") & missing(show.clust.cent))
+    show.clust.cent <- FALSE # hide mean point for PAM, CLARA
   
-  
-    
-  
-  # Add cluster center
-  clustcent <- stats::aggregate(ind[, 2:3], by=list(cluster=cluster), mean)
-  colnames(clustcent) <- c("cluster", "x", "y")
-  if(show.clust.cent){
-    if("point" %in% geom) 
-      p <- p + geom_point(data=clustcent,
-                          aes_string('x', 'y', color="cluster", shape="cluster"),
-                          size=pointsize*2)    
-    if("text" %in% geom){
-      if(repel)
-        p <- p +ggrepel::geom_text_repel(data = clustcent, 
-                                         aes_string('x', 'y', color="cluster"),
-                                         label=clustcent$cluster, size=labelsize*1.2)
-      else
-        p <- p + geom_text(data=clustcent, 
-                           aes_string('x', 'y', color="cluster"),
-                           label=clustcent$cluster, size=labelsize*1.2, vjust=-1)
-    }
-    
-  }
-  
-  # Add frame
-  if(frame){
-    if (frame.type == 'convex'){
-      frame.data <- .cluster_chull(ind[, c("x", "y")], cluster)
-      mapping = aes_string(x = "x", y = "y", colour ="cluster", fill = "cluster")
-      p <- p + ggplot2::geom_polygon(data = frame.data,  mapping = mapping, alpha = frame.alpha)
-    }
-    else if (frame.type %in% c('t', 'norm', 'euclid')) {
-        mapping = aes_string(x = "x", y = "y", colour = "cluster", fill = "cluster")
-        p <- p + ggplot2::stat_ellipse(mapping = mapping, data = plot.data,
-                                       level = frame.level, type = frame.type,
-                                       geom = 'polygon', alpha = frame.alpha)
-    }
-  }
+  p <- ggpubr::ggscatter(plot.data, "x", "y",
+                         color="cluster", shape = shape, size = pointsize,
+                         point = "point" %in% geom, 
+                         label = lab,
+                         font.label = labelsize, repel = repel,
+                         mean.point = show.clust.cent, 
+                         ellipse = ellipse, ellipse.type = ellipse.type,
+                         ellipse.alpha = ellipse.alpha, ellipse.level = ellipse.level,
+                         main = main, xlab = xlab, ylab = ylab,
+                         ggtheme = ggtheme, ...
+                         )
   
   # Add outliers (can exist only in dbscan)
   if(is_outliers)
     p <- .add_outliers(p, outliers_data, outliers_labs, outlier.color, outlier.shape,
                   pointsize, labelsize, geom, repel = repel)
-  
-  
-  # Plot titles
-  # ++++++++++++++++++++++++
-  if(pca_performed){
-    eig <- get_eigenvalue(pca)[,2]
-    xlab = paste0("Dim", 1, " (", round(eig[1],1), "%)") 
-    ylab = paste0("Dim", 2, " (", round(eig[2], 1),"%)")
-  }else{
-    xlab <- colnames(data)[1]
-    ylab <- colnames(data)[2]
-  }
-  title2 <- title
-  p <- p + labs(title = title2, x = xlab, y = ylab)
 
   p
 }
 
 
-# Compute convex hull for each cluster
-# ++++++++++++++++++++++++++++++++
-# x,y: numeric vector corresponding to the coordinates of points
-# cluster: groups of observations
-.cluster_chull <- function(x, cluster){
-  cluster <- as.factor(cluster)
-  levs <- levels(cluster)
-  res = NULL
-  for(lev in levs){
-    dd <- x[which(cluster == lev), , drop = FALSE]
-    cc <- chull(dd)
-    res <- rbind(res, cbind(dd[cc, , drop = FALSE], cluster = rep(lev, length(cc))))
-  }
-  as.data.frame(res)
-}
 
 # Add outliers to cluster plot (for dbscan only)
 .add_outliers <-function(p, outliers_data, outliers_labs, 

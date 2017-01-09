@@ -10,37 +10,28 @@
 fviz_pca(X, ...)
 
 fviz_pca_ind(X, axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
-  label = "all", invisible = "none", labelsize = 4, pointsize = 2,
-  habillage = "none", addEllipses = FALSE, ellipse.level = 0.95,
-  ellipse.type = "norm", ellipse.alpha = 0.1, col.ind = "black",
-  col.ind.sup = "blue", alpha.ind = 1, select.ind = list(name = NULL, cos2
-  = NULL, contrib = NULL), jitter = list(what = "label", width = NULL, height
-  = NULL), title = "Individuals factor map - PCA", axes.linetype = "dashed",
-  ...)
+  habillage = "none", palette = NULL, addEllipses = FALSE,
+  col.ind = "black", col.ind.sup = "blue", alpha.ind = 1,
+  select.ind = list(name = NULL, cos2 = NULL, contrib = NULL), ...)
 
-fviz_pca_var(X, axes = c(1, 2), geom = c("arrow", "text"), label = "all",
-  invisible = "none", repel = FALSE, labelsize = 4, col.var = "black",
-  alpha.var = 1, col.quanti.sup = "blue", col.circle = "grey70",
-  select.var = list(name = NULL, cos2 = NULL, contrib = NULL),
-  jitter = list(what = "label", width = NULL, height = NULL),
-  title = "Variables factor map - PCA", axes.linetype = "dashed")
+fviz_pca_var(X, axes = c(1, 2), geom = c("arrow", "text"), repel = FALSE,
+  col.var = "black", alpha.var = 1, col.quanti.sup = "blue",
+  col.circle = "grey70", select.var = list(name = NULL, cos2 = NULL, contrib
+  = NULL), ...)
 
 fviz_pca_biplot(X, axes = c(1, 2), geom = c("point", "text"),
-  label = "all", invisible = "none", labelsize = 4, pointsize = 2,
-  habillage = "none", addEllipses = FALSE, ellipse.level = 0.95,
-  col.ind = "black", col.ind.sup = "blue", alpha.ind = 1,
-  col.var = "steelblue", alpha.var = 1, col.quanti.sup = "blue",
-  col.circle = "grey70", repel = FALSE, axes.linetype = "dashed",
-  select.var = list(name = NULL, cos2 = NULL, contrib = NULL),
-  select.ind = list(name = NULL, cos2 = NULL, contrib = NULL),
-  title = "Biplot of variables and individuals", jitter = list(what =
-  "label", width = NULL, height = NULL), ...)
+  col.ind = "black", col.var = "steelblue", label = "all",
+  invisible = "none", repel = FALSE, habillage = "none", palette = NULL,
+  addEllipses = FALSE, title = "PCA - Biplot", ...)
 }
 \arguments{
 \item{X}{an object of class PCA [FactoMineR]; prcomp and princomp [stats]; 
-dudi and pca [ade4].}
+dudi and pca [ade4]; expOutput/epPCA [ExPosition].}
 
-\item{...}{Arguments to be passed to the function fviz_pca_biplot().}
+\item{...}{Additional arguments. \itemize{ \item in fviz_pca_ind() and 
+fviz_pca_var(): Additional arguments are passed to the functions 
+fviz() and ggpubr::ggpar(). \item in fviz_pca_biplot() and fviz_pca(): Additional
+arguments are passed to fviz_pca_ind() and fviz_pca_var().}}
 
 \item{axes}{a numeric vector of length 2 specifying the dimensions to be 
 plotted.}
@@ -53,39 +44,21 @@ c("arrow", "text") to show both types.}
 \item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
 labels or not.}
 
-\item{label}{a text specifying the elements to be labelled. Default value is 
-"all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
-"quali", "var", "quanti.sup"). "ind" can be used to label only active 
-individuals. "ind.sup" is for supplementary individuals. "quali" is for 
-supplementary qualitative variables. "var" is for active variables. 
-"quanti.sup" is for quantitative supplementary variables.}
-
-\item{invisible}{a text specifying the elements to be hidden on the plot. 
-Default value is "none". Allowed values are the combination of c("ind", 
-"ind.sup", "quali", "var", "quanti.sup").}
-
-\item{labelsize}{font size for the labels}
-
-\item{pointsize}{the size of points}
-
 \item{habillage}{an optional factor variable for coloring the observations by
 groups. Default value is "none". If X is a PCA object from FactoMineR 
 package, habillage can also specify the supplementary qualitative variable 
 (by its index or name) to be used for coloring individuals by groups (see 
 ?PCA in FactoMineR).}
 
+\item{palette}{the color palette to be used for coloring or filling by
+groups. Allowed values include "grey" for grey color palettes; brewer
+palettes e.g. "RdBu", "Blues", ...; or custom color palette e.g. c("blue",
+"red"); and scientific journal palettes from ggsci R package, e.g.: "npg",
+"aaas", "lancet", "jco", "ucscgb", "uchicago", "simpsons" and
+"rickandmorty".}
+
 \item{addEllipses}{logical value. If TRUE, draws ellipses around the 
 individuals when habillage != "none".}
-
-\item{ellipse.level}{the size of the concentration ellipse in normal 
-probability.}
-
-\item{ellipse.type}{Character specifying frame type. Possible values are 
-'convex' or types supporeted by \code{\link[ggplot2]{stat_ellipse}} 
-including one of c("t", "norm", "euclid").}
-
-\item{ellipse.alpha}{Alpha for ellipse specifying the transparency level of 
-fill color. Use alpha = 0 for no fill color.}
 
 \item{col.ind, col.var}{color for individuals and variables, respectively. 
 Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
@@ -115,20 +88,22 @@ ex: 5, then the top 5 individuals/variables with the highest cos2 are
 drawn. \item contrib: if contrib > 1, ex: 5,  then the top 5 
 individuals/variables with the highest contrib are drawn }}
 
-\item{jitter}{a parameter used to jitter the points in order to reduce 
-overplotting. It's a list containing the objects what, width and height 
-(i.e jitter = list(what, width, height)). \itemize{ \item what: the element
-to be jittered. Possible values are "point" or "p"; "label" or "l"; "both" 
-or "b". \item width: degree of jitter in x direction \item height: degree 
-of jitter in y direction }}
-
-\item{title}{the title of the graph}
-
-\item{axes.linetype}{linetype of x and y axes.}
-
 \item{col.quanti.sup}{a color for the quantitative supplementary variables.}
 
-\item{col.circle}{a color for the correlation circle.}
+\item{col.circle}{a color for the correlation circle. Used only when X is a PCA output.}
+
+\item{label}{a text specifying the elements to be labelled. Default value is 
+"all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
+"quali", "var", "quanti.sup"). "ind" can be used to label only active 
+individuals. "ind.sup" is for supplementary individuals. "quali" is for 
+supplementary qualitative variables. "var" is for active variables. 
+"quanti.sup" is for quantitative supplementary variables.}
+
+\item{invisible}{a text specifying the elements to be hidden on the plot. 
+Default value is "none". Allowed values are the combination of c("ind", 
+"ind.sup", "quali", "var", "quanti.sup").}
+
+\item{title}{the title of the graph}
 }
 \value{
 a ggplot
@@ -138,9 +113,9 @@ Principal component analysis (PCA) reduces the dimensionality of
   multivariate data, to two or three that can be visualized graphically with 
   minimal loss of information. fviz_pca() provides ggplot2-based elegant 
   visualization of PCA outputs from: i) prcomp and princomp [in built-in R 
-  stats], ii) PCA [in FactoMineR] and iii) dudi.pca [in ade4]. Read more:
+  stats], ii) PCA [in FactoMineR], iii) dudi.pca [in ade4] and epPCA [ExPosition]. Read more: 
   \href{http://www.sthda.com/english/wiki/factominer-and-factoextra-principal-component-analysis-visualization-r-software-and-data-mining}{Principal
-  Component Analysis}
+   Component Analysis}
   
   \itemize{ \item{fviz_pca_ind(): Graph of individuals} \item{fviz_pca_var():
   Graph of variables} \item{fviz_pca_biplot(): Biplot of individuals and 
@@ -157,47 +132,33 @@ res.pca <- prcomp(iris[, -5],  scale = TRUE)
 # +++++++++++++++++++++
 
 # Default plot
-fviz_pca_ind(res.pca, col.ind = "#00AFBB")
+# Use repel = TRUE to avoid overplotting (slow if many points)
+fviz_pca_ind(res.pca, col.ind = "#00AFBB",
+   repel = TRUE)
 
  
 # 1. Control automatically the color of individuals 
    # using the "cos2" or the contributions "contrib"
    # cos2 = the quality of the individuals on the factor map
 # 2. To keep only point or text use geom = "point" or geom = "text".
-# 3. Change themes: http://www.sthda.com/english/wiki/ggplot2-themes
+# 3. Change themes using ggtheme: http://www.sthda.com/english/wiki/ggplot2-themes
 
-fviz_pca_ind(res.pca, col.ind="cos2", geom = "point")+
- theme_minimal() 
+fviz_pca_ind(res.pca, col.ind="cos2", geom = "point",
+   gradient.cols = c("white", "#2E9FDF", "#FC4E07" ))
 
-# Change gradient color
-# Use repel = TRUE to avoid overplotting (slow if many points)
-fviz_pca_ind(res.pca, col.ind="cos2", repel = TRUE) + 
-      scale_color_gradient2(low = "white", mid = "#2E9FDF", 
-      high= "#FC4E07", midpoint=0.6, space = "Lab")+
-      theme_minimal()
-   
-# You can also control the transparency 
-# of the color by the cos2
-fviz_pca_ind(res.pca, alpha.ind="cos2") +
-     theme_minimal()        
-             
 # Color individuals by groups, add concentration ellipses
-# Remove labels: label = "none".
-p <- fviz_pca_ind(res.pca, label="none", habillage=iris$Species,
-       addEllipses=TRUE, ellipse.level=0.95)
-print(p)
-             
 # Change group colors using RColorBrewer color palettes
 # Read more: http://www.sthda.com/english/wiki/ggplot2-colors
-p + scale_color_brewer(palette="Dark2") +
-    scale_fill_brewer(palette="Dark2") +
-     theme_minimal()
+# Remove labels: label = "none".
+fviz_pca_ind(res.pca, label="none", habillage=iris$Species,
+     addEllipses=TRUE, ellipse.level=0.95, palette = "Dark2")
+             
      
 # Change group colors manually
 # Read more: http://www.sthda.com/english/wiki/ggplot2-colors
-p + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
- scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
- theme_minimal()    
+fviz_pca_ind(res.pca, label="none", habillage=iris$Species,
+     addEllipses=TRUE, ellipse.level=0.95,
+     palette = c("#999999", "#E69F00", "#56B4E9"))
       
 # Select and visualize some individuals (ind) with select.ind argument.
  # - ind with cos2 >= 0.96: select.ind = list(cos2 = 0.96)
@@ -213,31 +174,21 @@ fviz_pca_ind(res.pca, select.ind = list(cos2 = 40))
 # ++++++++++++++++++++++++++++
   
 # Default plot
-fviz_pca_var(res.pca, col.var = "steelblue")+
-theme_minimal()
+fviz_pca_var(res.pca, col.var = "steelblue")
  
 # Control variable colors using their contributions
-fviz_pca_var(res.pca, col.var = "contrib")+
- scale_color_gradient2(low="white", mid="blue", 
-           high="red", midpoint=96, space = "Lab") +
- theme_minimal()         
+fviz_pca_var(res.pca, col.var = "contrib", 
+   gradient.cols = c("white", "blue", "red"),
+   ggtheme = theme_minimal())
  
-# Select variables with select.var argument
-   # You can select by contrib, cos2 and name 
-   # as previously described for ind
-# Select the top 3 contributing variables
-fviz_pca_var(res.pca, select.var = list(contrib = 3))
-
     
 # Biplot of individuals and variables
 # ++++++++++++++++++++++++++
-fviz_pca_biplot(res.pca)
-
 # Keep only the labels for variables
 # Change the color by groups, add ellipses
 fviz_pca_biplot(res.pca, label = "var", habillage=iris$Species,
-               addEllipses=TRUE, ellipse.level=0.95)+
-theme_minimal()
+               addEllipses=TRUE, ellipse.level=0.95,
+               ggtheme = theme_minimal())
 
  }
  

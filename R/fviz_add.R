@@ -14,13 +14,9 @@
 #' @param pointsize the size of points
 #' @param shape point shape when geom ="point"
 #' @param linetype the linetype to be used when geom ="arrow"
-#' @param jitter a parameter used to jitter the points in order to reduce overplotting. 
-#' It's a list containing the objects what, width and height (i.e jitter = list(what, width, height)). 
-#' \itemize{
-#' \item what: the element to be jittered. Possible values are "point" or "p"; "label" or "l"; "both" or "b".
-#' \item width: degree of jitter in x direction
-#' \item height: degree of jitter in y direction
-#' }
+#' @param repel a boolean, whether to use ggrepel to avoid overplotting text 
+#'   labels or not.
+#' @param ... Additional arguments, not used
 #' @return a ggplot2 plot
 #' @author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
 #' @references http://www.sthda.com
@@ -45,10 +41,19 @@
 #' @export 
 fviz_add <- function(ggp, df, axes = c(1,2), geom=c("point", "arrow"), color ="blue", 
                      addlabel = TRUE, labelsize = 4, pointsize = 2, shape=19, linetype ="dashed",
-                     jitter = list(what = "label", width = NULL, height = NULL))
+                     repel = FALSE, ...)
 {
+  # Deprecated arguments
+  extra_args <- list(...)
+  if (!is.null(extra_args$jitter)) {
+    warning("argument jitter is deprecated; please use repel = TRUE instead, to avoid overlapping of labels.", 
+            call. = FALSE)
+    if(!is.null(extra_args$jitter$width) | !is.null(extra_args$jitter$height) ) repel = TRUE
+  }
+  
   if(!inherits(df, c("data.frame", "matrix")))
      stop("df should be a data frame or a matrix")
+  if(!inherits(df, "data.frame")) df <- as.data.frame(df)
      
   if(ncol(df) < 2)
     stop("df should have at least two columns (x and y coordinates)")
@@ -56,41 +61,47 @@ fviz_add <- function(ggp, df, axes = c(1,2), geom=c("point", "arrow"), color ="b
   if(length(intersect(geom, c("point", "arrow", "text"))) == 0)
     stop("The specified value(s) for the argument geom are not allowed ")
   
-  df <- data.frame(name = rownames(df), x = df[,axes[1]], y = df[,axes[2]]) 
-  label_coord <- df
+  if(is.null(df$name)) df$name <- rownames(df)
+  if(is.null(df$x)) df$x <- df[,axes[1]]
+  if(is.null(df$y)) df$y <- df[,axes[1]]
   
-  # jittering
-  if(jitter$what %in% c("both", "b")){
-    label_coord <- df <- .jitter(data, jitter)
-  }
-  else if(jitter$what %in% c("point", "p")){
-    df<- .jitter(df, jitter)
-  }
-  else if(jitter$what %in% c("label", "l")){
-    label_coord <- .jitter(label_coord, jitter)
-  }
-  
-  
+  # Plot
+  #%%%%%%%%%%%%%%%%%%%%%%
+  hjust <- vjust <- 0.5
   if("point" %in% geom) {
-    p <-  ggp + geom_point(data = df, aes_string("x", "y"), 
-                           color = color, shape = shape, size = pointsize)
-    if(addlabel) 
-      p <- p + geom_text(data = label_coord, aes_string("x", "y"), color = color,
-                         label = df$name, size = labelsize, vjust=-0.7)
+    p <- ggp + ggpubr::geom_exec(geom_point, data = df, x = "x", y = "y",
+                                 color = color, shape = shape, size = pointsize)
+    vjust <- -0.7
   }
   else if("arrow" %in% geom){
     p <- ggp + geom_segment(data = df,
                       aes_string(x = 0, y = 0, xend = 'x', yend = 'y'),
                       arrow = grid::arrow(length = grid::unit(0.2, 'cm')), 
                       color=color, linetype=linetype)
-    if(addlabel)
-      p <- p + geom_text(data = label_coord, aes_string("x", "y"),
-                         label = df$name, color=color, 
-                         size = labelsize, hjust=0.8, vjust=0) 
+    hjust <- 0.8
+    vjust <- 0
   }
-  else if("text" %in% geom)
-    p <- ggp + geom_text(data = label_coord, aes_string("x", "y"), color = color,
-                       label = df$name, size = labelsize, vjust=-0.7)
+  else if("text" %in% geom) {
+    vjust <- -0.7
+    p <- ggp
+  }
+  
+  if(addlabel | "text" %in% geom){
+    if(repel){
+      p <- p + ggpubr::geom_exec(ggrepel::geom_text_repel, data = df, x = "x", y = "y", 
+                                 label = "name", color = color, size = labelsize)
+    }
+    else{
+      p <- p + ggpubr::geom_exec(geom_text, data = df, x = "x", y = "y", 
+                                 label = "name", color = color, size = labelsize,
+                                 vjust=vjust, hjust = hjust)
+      
+#       p <- p + geom_text(data = df, aes_string("x", "y"), color = color,
+#                          label = df$name, size = labelsize, vjust=vjust, hjust = hjust)
+      
+    } 
+  }
+  
   
   return(p)
 }

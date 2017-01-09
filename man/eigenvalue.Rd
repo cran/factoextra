@@ -14,12 +14,13 @@ get_eigenvalue(X)
 
 fviz_eig(X, choice = c("variance", "eigenvalue"), geom = c("bar", "line"),
   barfill = "steelblue", barcolor = "steelblue", linecolor = "black",
-  ncp = 10, addlabels = FALSE, hjust = 0, ...)
+  ncp = 10, addlabels = FALSE, hjust = 0, main = NULL, xlab = NULL,
+  ylab = NULL, ggtheme = theme_minimal(), ...)
 
 fviz_screeplot(...)
 }
 \arguments{
-\item{X}{an object of class PCA, CA, MCA, MFA and HMFA [FactoMineR]; prcomp 
+\item{X}{an object of class PCA, CA, MCA, FAMD, MFA and HMFA [FactoMineR]; prcomp 
 and princomp [stats]; dudi, pca, coa and acm [ade4]; ca and mjca [ca 
 package].}
 
@@ -43,8 +44,13 @@ or points showing the information retained by each dimension.}
 
 \item{hjust}{horizontal adjustment of the labels.}
 
-\item{...}{optional arguments to be passed to the functions geom_bar(), 
-geom_line(), geom_text() or fviz_eig().}
+\item{main, xlab, ylab}{plot main and axis titles.}
+
+\item{ggtheme}{function, ggplot2 theme name. Default value is theme_pubr().
+Allowed values include ggplot2 official themes: theme_gray(), theme_bw(),
+theme_minimal(), theme_classic(), theme_void(), ....}
+
+\item{...}{optional arguments to be passed to the function \link[ggpubr]{ggpar}.}
 }
 \value{
 \itemize{ \item{get_eig() (or get_eigenvalue()): returns a data.frame 
@@ -54,9 +60,7 @@ geom_line(), geom_text() or fviz_eig().}
 }
 \description{
 Eigenvalues correspond to the amount of the variation explained 
- by each principal component (PC). Read more: 
- \href{http://www.sthda.com/english/wiki/factominer-and-factoextra-principal-component-analysis-visualization-r-software-and-data-mining}{Principal
-  Component Analysis}
+ by each principal component (PC). 
  
  \itemize{ \item{get_eig(): Extract the eigenvalues/variances of the 
  principal dimensions} \item{fviz_eig(): Plot the eigenvalues/variances 
@@ -64,7 +68,7 @@ Eigenvalues correspond to the amount of the variation explained
  get_eig()} \item{fviz_screeplot(): an alias of fviz_eig()} }
  
  These functions support the results of Principal Component Analysis (PCA), 
- Correspondence Analysis (CA), Multiple Correspondence Analysis (MCA), 
+ Correspondence Analysis (CA), Multiple Correspondence Analysis (MCA), Factor Analysis of Mixed Data (FAMD),
  Multiple Factor Analysis (MFA) and Hierarchical Multiple Factor Analysis 
  (HMFA) functions.
 }
@@ -78,24 +82,7 @@ res.pca <- prcomp(iris[, -5],  scale = TRUE)
 get_eig(res.pca)
 
 # Default plot
-fviz_eig(res.pca)
-
-# Customize the plot
-   # - Add labels
-   # - Change line color, bar fill and color. 
-   # - Change axis limits and themes
-   
-p <- fviz_eig(res.pca, addlabels = TRUE, hjust = -0.3,
-           linecolor = "#FC4E07", 
-           barfill="white", barcolor ="darkblue")+ 
-     ylim(0, 85)+ # y axis limits
-     theme_minimal() # themes: http://www.sthda.com/english/wiki/ggplot2-themes
-print(p)
-
-# Change plot title and axis labels
-p + labs(title = "Variances - PCA",
-        x = "Principal Components", y = "\% of variances")
-
+fviz_eig(res.pca, addlabels = TRUE, ylim = c(0, 85))
   
 # Scree plot - Eigenvalues
 fviz_eig(res.pca, choice = "eigenvalue", addlabels=TRUE)
@@ -103,7 +90,7 @@ fviz_eig(res.pca, choice = "eigenvalue", addlabels=TRUE)
 # Use only bar  or line plot: geom = "bar" or geom = "line"
 fviz_eig(res.pca, geom="line")
  
-        
+\dontrun{         
 # Correspondence Analysis
 # +++++++++++++++++++++++++++++++++
 library(FactoMineR)
@@ -111,8 +98,7 @@ data(housetasks)
 res.ca <- CA(housetasks, graph = FALSE)
 get_eig(res.ca)
 fviz_eig(res.ca, linecolor = "#FC4E07",
-   barcolor = "#00AFBB", barfill = "#00AFBB")+
-   theme_minimal()
+   barcolor = "#00AFBB", barfill = "#00AFBB")
 
 # Multiple Correspondence Analysis
 # +++++++++++++++++++++++++++++++++
@@ -122,29 +108,15 @@ res.mca <- MCA(poison, quanti.sup = 1:2,
               quali.sup = 3:4, graph=FALSE)
 get_eig(res.mca)
 fviz_eig(res.mca, linecolor = "#FC4E07",
-   barcolor = "#2E9FDF", barfill = "#2E9FDF")+
-   theme_minimal()
- 
- 
-# Multiple Factor Analysis
-# +++++++++++++++++++++++++++++++++
-library(FactoMineR)
-data(wine)
-res.mfa <- MFA(wine, group=c(2,5,3,10,9,2), type=c("n",rep("s",5)),
-               ncp=5, name.group=c("orig","olf","vis","olfag","gust","ens"),
-               num.group.sup=c(1,6), graph=FALSE)
-get_eig(res.mfa)
-fviz_eig(res.mfa, linecolor = "#FC4E07",
-   barcolor = "#E7B800", barfill = "#E7B800")+
-   theme_minimal()
-
+   barcolor = "#2E9FDF", barfill = "#2E9FDF")
+}
 
 }
 \author{
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
 }
 \references{
-http://www.sthda.com
+http://www.sthda.com/english/
 }
 \seealso{
 \code{\link{fviz_pca}}, \code{\link{fviz_ca}},

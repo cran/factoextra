@@ -14,7 +14,7 @@ get_pca_var(res.pca)
 }
 \arguments{
 \item{res.pca}{an object of class PCA [FactoMineR]; 
-prcomp and princomp [stats]; pca, dudi [adea4].}
+prcomp and princomp [stats]; pca, dudi [adea4]; epPCA [ExPosition].}
 
 \item{element}{the element to subset from the output. Allowed values are 
 "var" (for active variables) or "ind" (for active individuals).}
@@ -65,6 +65,6 @@ the active individuals/variables from Principal Component Analysis (PCA) outputs
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
 }
 \references{
-http://www.sthda.com
+http://www.sthda.com/english/
 }
 

@@ -26,6 +26,7 @@
 #'@param label logical value. If true, x axis tick labels are shown
 #'@param print.summary logical value. If true a summary of cluster silhouettes 
 #'  are printed in fviz_silhouette().
+#' @param ... other arguments to be passed to the function ggpubr::ggpar().
 #'  
 #'@return return a ggplot
 #'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
@@ -43,10 +44,10 @@
 #' 
 #' # K-means clustering
 #' # +++++++++++++++++++++
-#' km.res <- kmeans(iris.scaled, 3, nstart = 25)
+#' km.res <- kmeans(iris.scaled, 3, nstart = 2)
 #' 
 #' # Visualize kmeans clustering
-#' fviz_cluster(km.res, iris[, -5], frame.type = "norm")+
+#' fviz_cluster(km.res, iris[, -5], ellipse.type = "norm")+
 #' theme_minimal()
 #' 
 #' # Visualize silhouhette information
@@ -57,13 +58,13 @@
 #' # Identify observation with negative silhouette
 #' neg_sil_index <- which(sil[, "sil_width"] < 0)
 #' sil[neg_sil_index, , drop = FALSE]
-#' 
+#' \dontrun{
 #' # PAM clustering
 #' # ++++++++++++++++++++
 #' require(cluster)
 #' pam.res <- pam(iris.scaled, 3)
 #' # Visualize pam clustering
-#' fviz_cluster(pam.res, frame.type = "norm")+
+#' fviz_cluster(pam.res, ellipse.type = "norm")+
 #' theme_minimal()
 #' # Visualize silhouhette information
 #' fviz_silhouette(pam.res)
@@ -76,9 +77,9 @@
 #' fviz_dend(hc.cut, show_labels = FALSE, rect = TRUE)
 #' # Visualize silhouhette information
 #' fviz_silhouette(hc.cut)
-#' 
+#' }
 #'@export
-fviz_silhouette <- function(sil.obj, label = FALSE, print.summary = TRUE){
+fviz_silhouette <- function(sil.obj, label = FALSE, print.summary = TRUE, ...){
   
   if(inherits(sil.obj, c("eclust", "hcut", "pam", "clara", "fanny"))){
     df <- as.data.frame(sil.obj$silinfo$widths)
@@ -100,7 +101,9 @@ fviz_silhouette <- function(sil.obj, label = FALSE, print.summary = TRUE){
          title = paste0("Clusters silhouette plot ",
                         "\n Average silhouette width: ", 
                         round(mean(df$sil_width), 2)))+
-    ggplot2::ylim(c(NA, 1))
+    ggplot2::ylim(c(NA, 1))+
+    geom_hline(yintercept = mean(df$sil_width), linetype = "dashed", color = "red" )
+  p <- ggpubr::ggpar(p, ...)
   # Labels
   if(!label) p <- p + theme(axis.text.x = element_blank(), 
                             axis.ticks.x = element_blank())

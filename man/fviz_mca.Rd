@@ -7,40 +7,27 @@
 \alias{fviz_mca_var}
 \title{Visualize Multiple Correspondence Analysis}
 \usage{
-fviz_mca_ind(X, axes = c(1, 2), geom = c("point", "text"), label = "all",
-  invisible = "none", labelsize = 4, pointsize = 2, repel = FALSE,
-  habillage = "none", addEllipses = FALSE, ellipse.level = 0.95,
-  ellipse.type = "norm", ellipse.alpha = 0.1, col.ind = "blue",
-  col.ind.sup = "darkblue", alpha.ind = 1, shape.ind = 19,
-  axes.linetype = "dashed", select.ind = list(name = NULL, cos2 = NULL,
-  contrib = NULL), map = "symmetric",
-  title = "Individuals factor map - MCA", jitter = list(what = "label",
-  width = NULL, height = NULL), ...)
+fviz_mca_ind(X, axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
+  habillage = "none", palette = NULL, addEllipses = FALSE,
+  col.ind = "blue", col.ind.sup = "darkblue", alpha.ind = 1,
+  shape.ind = 19, map = "symmetric", select.ind = list(name = NULL, cos2 =
+  NULL, contrib = NULL), ...)
 
-fviz_mca_var(X, axes = c(1, 2), geom = c("point", "text"), label = "all",
-  invisible = "none", labelsize = 4, pointsize = 2, col.var = "red",
-  alpha.var = 1, shape.var = 17, col.quanti.sup = "blue",
-  col.quali.sup = "darkgreen", repel = FALSE,
-  title = "Variable categories- MCA", select.var = list(name = NULL, cos2 =
-  NULL, contrib = NULL), axes.linetype = "dashed", map = "symmetric",
-  jitter = list(what = "label", width = NULL, height = NULL))
+fviz_mca_var(X, choice = c("var.cat", "mca.cor", "var", "quanti.sup"),
+  axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
+  col.var = "red", alpha.var = 1, shape.var = 17,
+  col.quanti.sup = "blue", col.quali.sup = "darkgreen", map = "symmetric",
+  select.var = list(name = NULL, cos2 = NULL, contrib = NULL), ...)
 
 fviz_mca_biplot(X, axes = c(1, 2), geom = c("point", "text"),
-  label = "all", invisible = "none", labelsize = 4, pointsize = 2,
-  habillage = "none", addEllipses = FALSE, ellipse.level = 0.95,
-  col.ind = "blue", col.ind.sup = "darkblue", alpha.ind = 1,
-  col.var = "red", alpha.var = 1, col.quanti.sup = "blue",
-  col.quali.sup = "darkgreen", repel = FALSE, shape.ind = 19,
-  shape.var = 17, axes.linetype = "dashed", select.var = list(name = NULL,
-  cos2 = NULL, contrib = NULL), select.ind = list(name = NULL, cos2 = NULL,
-  contrib = NULL), map = "symmetric", arrows = c(FALSE, FALSE),
-  title = "MCA factor map - Biplot", jitter = list(what = "label", width =
-  NULL, height = NULL), ...)
+  repel = FALSE, label = "all", invisible = "none", habillage = "none",
+  addEllipses = FALSE, palette = NULL, arrows = c(FALSE, FALSE),
+  map = "symmetric", title = "MCA - Biplot", ...)
 
 fviz_mca(X, ...)
 }
 \arguments{
-\item{X}{an object of class MCA [FactoMineR], acm [ade4].}
+\item{X}{an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA [ExPosition].}
 
 \item{axes}{a numeric vector of length 2 specifying the dimensions to be 
 plotted.}
@@ -50,22 +37,6 @@ values are the combination of c("point", "arrow", "text"). Use "point" (to
 show only points); "text" to show only labels; c("point", "text") or 
 c("arrow", "text") to show both types.}
 
-\item{label}{a text specifying the elements to be labelled. Default value is 
-"all". Allowed values are "none" or the combination of c("ind", 
-"ind.sup","var", "quali.sup",  "quanti.sup"). "ind" can be used to label 
-only active individuals. "ind.sup" is for supplementary individuals. "var" 
-is for active variable categories. "quali.sup" is for supplementary 
-qualitative variable categories. "quanti.sup" is for quantitative 
-supplementary variables.}
-
-\item{invisible}{a text specifying the elements to be hidden on the plot. 
-Default value is "none". Allowed values are the combination of c("ind", 
-"ind.sup","var", "quali.sup",  "quanti.sup").}
-
-\item{labelsize}{font size for the labels}
-
-\item{pointsize}{the size of points}
-
 \item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
 labels or not.}
 
@@ -74,18 +45,15 @@ groups. Default value is "none". If X is an MCA object from FactoMineR
 package, habillage can also specify the index of the factor variable in the 
 data.}
 
+\item{palette}{the color palette to be used for coloring or filling by
+groups. Allowed values include "grey" for grey color palettes; brewer
+palettes e.g. "RdBu", "Blues", ...; or custom color palette e.g. c("blue",
+"red"); and scientific journal palettes from ggsci R package, e.g.: "npg",
+"aaas", "lancet", "jco", "ucscgb", "uchicago", "simpsons" and
+"rickandmorty".}
+
 \item{addEllipses}{logical value. If TRUE, draws ellipses around the 
 individuals when habillage != "none".}
-
-\item{ellipse.level}{the size of the concentration ellipse in normal 
-probability.}
-
-\item{ellipse.type}{Character specifying frame type. Possible values are 
-'convex' or types supporeted by \code{\link[ggplot2]{stat_ellipse}} 
-including one of c("t", "norm", "euclid").}
-
-\item{ellipse.alpha}{Alpha for ellipse specifying the transparency level of 
-fill color. Use alpha = 0 for no fill color.}
 
 \item{col.ind, col.var}{color for individuals and variables, respectively. 
 Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
@@ -107,7 +75,9 @@ habillage ="none".}
 
 \item{shape.ind, shape.var}{point shapes of individuals and variables.}
 
-\item{axes.linetype}{linetype of x and y axes.}
+\item{map}{character string specifying the map type. Allowed options include: 
+"symmetric", "rowprincipal", "colprincipal", "symbiplot", "rowgab", 
+"colgab", "rowgreen" and "colgreen". See details}
 
 \item{select.ind, select.var}{a selection of individuals/variables to be drawn.
 Allowed values are NULL or a list containing the arguments name, cos2 or 
@@ -118,64 +88,60 @@ then the top 5 individuals/variables with the highest cos2 are drawn. \item
 contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with 
 the highest contrib are drawn }}
 
-\item{map}{character string specifying the map type. Allowed options include: 
-"symmetric", "rowprincipal", "colprincipal", "symbiplot", "rowgab", 
-"colgab", "rowgreen" and "colgreen". See details}
+\item{...}{Additional arguments. \itemize{ \item in fviz_mca_ind(), 
+fviz_mca_var() and fviz_mca_cor(): Additional arguments are passed to the 
+functions fviz() and ggpubr::ggpar(). \item in fviz_mca_biplot() and 
+fviz_mca(): Additional arguments are passed to fviz_mca_ind() and 
+fviz_mca_var().}}
 
-\item{title}{the title of the graph}
-
-\item{jitter}{a parameter used to jitter the points in order to reduce 
-overplotting. It's a list containing the objects what, width and height (i.e
-jitter = list(what, width, height)). \itemize{ \item what: the element to be
-jittered. Possible values are "point" or "p"; "label" or "l"; "both" or "b" 
-\item width: degree of jitter in x direction \item height: degree of jitter 
-in y direction }}
-
-\item{...}{Arguments to be passed to the function fviz_mca_biplot()}
+\item{choice}{the graph to plot. Allowed values include: i) "var" and 
+"mca.cor" for plotting the correlation between variables and principal
+dimensions; ii) "var.cat" for variable categories and iii) "quanti.sup" for the
+supplementary quantitative variables.}
 
 \item{col.quanti.sup, col.quali.sup}{a color for the quantitative/qualitative 
 supplementary variables.}
 
+\item{label}{a text specifying the elements to be labelled. Default value is 
+"all". Allowed values are "none" or the combination of c("ind", 
+"ind.sup","var", "quali.sup",  "quanti.sup"). "ind" can be used to label 
+only active individuals. "ind.sup" is for supplementary individuals. "var" 
+is for active variable categories. "quali.sup" is for supplementary 
+qualitative variable categories. "quanti.sup" is for quantitative 
+supplementary variables.}
+
+\item{invisible}{a text specifying the elements to be hidden on the plot. 
+Default value is "none". Allowed values are the combination of c("ind", 
+"ind.sup","var", "quali.sup",  "quanti.sup").}
+
 \item{arrows}{Vector of two logicals specifying if the plot should contain 
 points (FALSE, default) or arrows (TRUE). First value sets the rows and the 
 second value sets the columns.}
+
+\item{title}{the title of the graph}
 }
 \value{
-a ggplot2 plot
+a ggplot
 }
 \description{
 Multiple Correspondence Analysis (MCA) is an extension of simple 
  CA to analyse a data table containing more than two categorical variables. 
  fviz_mca() provides ggplot2-based elegant visualization of MCA outputs from 
- the R functions: MCA [in FactoMineR], and acm [in ade4]. Read more: 
+ the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in ExPosition]. Read more: 
  \href{http://www.sthda.com/english/wiki/multiple-correspondence-analysis-essentials-interpretation-and-application-to-investigate-the-associations-between-categories-of-multiple-qualitative-variables-r-software-and-data-mining}{Multiple
   Correspondence Analysis Essentials.}
  
  \itemize{ \item{fviz_mca_ind(): Graph of individuals} \item{fviz_mca_var(): 
  Graph of variables} \item{fviz_mca_biplot(): Biplot of individuals and 
- variables} \item{fviz_mca(): An alias of fviz_mca_biplot()} }
+ variables} \item{fviz_mca(): An alias of fviz_mca_biplot()}}
 }
 \details{
 The default plot of MCA is a "symmetric" plot in which both rows and 
  columns are in principal coordinates. In this situation, it's not possible 
  to interpret the distance between row points and column points. To overcome 
- this problem, the simplest way is to make an asymmetric plot. This means 
- that, the column profiles must be presented in row space or vice-versa. The 
- allowed options for the argument map are: \itemize{ \item "rowprincipal" or 
- "colprincipal": asymmetric plots with either rows in principal coordinates 
- and columns in standard coordinates, or vice versa. These plots preserve row
- metric or column metric respectively. \item "symbiplot": Both rows and 
- columns are scaled to have variances equal to the singular values (square 
- roots of eigenvalues), which gives a symmetric biplot but does not preserve 
- row or column metrics. \item "rowgab" or "colgab": Asymmetric maps, proposed
- by Gabriel & Odoroff (1990), with rows (respectively, columns) in principal 
- coordinates and columns (respectively, rows) in standard coordinates 
- multiplied by the mass of the corresponding point. \item "rowgreen" or 
- "colgreen": The so-called contribution biplots showing visually the most 
- contributing points (Greenacre 2006b). These are similar to "rowgab" and 
- "colgab" except that the points in standard coordinates are multiplied by 
- the square root of the corresponding masses, giving reconstructions of the 
- standardized residuals. }
+ this problem, the simplest way is to make an asymmetric plot. The argument 
+ "map" can be used to change the plot type. For more explanation, read the 
+ details section of fviz_ca documentation.
 }
 \examples{
 # Multiple Correspondence Analysis
@@ -201,14 +167,12 @@ fviz_mca_ind(res.mca, col.ind = "steelblue")
 # 2. To keep only point or text use geom = "point" or geom = "text".
 # 3. Change themes: http://www.sthda.com/english/wiki/ggplot2-themes
 
-fviz_mca_ind(res.mca, col.ind = "cos2", repel = TRUE)+
-theme_minimal()
+fviz_mca_ind(res.mca, col.ind = "cos2", repel = TRUE)
 
 \dontrun{     
 # You can also control the transparency 
 # of the color by the cos2
-fviz_mca_ind(res.mca, alpha.ind="cos2") +
-     theme_minimal()  
+fviz_mca_ind(res.mca, alpha.ind="cos2") 
 }
      
 # Color individuals by groups, add concentration ellipses
@@ -222,14 +186,12 @@ print(p)
 # Change group colors using RColorBrewer color palettes
 # Read more: http://www.sthda.com/english/wiki/ggplot2-colors
 p + scale_color_brewer(palette="Dark2") +
-    scale_fill_brewer(palette="Dark2") +
-     theme_minimal()
+    scale_fill_brewer(palette="Dark2") 
      
 # Change group colors manually
 # Read more: http://www.sthda.com/english/wiki/ggplot2-colors
 p + scale_color_manual(values=c("#999999", "#E69F00"))+
- scale_fill_manual(values=c("#999999", "#E69F00"))+
- theme_minimal()  
+ scale_fill_manual(values=c("#999999", "#E69F00"))
              
              
 # Select and visualize some individuals (ind) with select.ind argument.
@@ -245,29 +207,19 @@ fviz_mca_ind(res.mca, select.ind = list(cos2 = 20))
 # Graph of variable categories
 # ++++++++++++++++++++++++++++
 # Default plot: use repel = TRUE to avoid overplotting
-fviz_mca_var(res.mca, col.var = "#FC4E07")+
-theme_minimal()
+fviz_mca_var(res.mca, col.var = "#FC4E07")
 
 # Control variable colors using their contributions
 # use repel = TRUE to avoid overplotting
-fviz_mca_var(res.mca, col.var = "contrib")+
- scale_color_gradient2(low="white", mid="blue", 
-           high="red", midpoint=2, space = "Lab") +
- theme_minimal()      
+fviz_mca_var(res.mca, col.var = "contrib",
+  gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
         
-   
-# Select variables with select.var argument
-   # You can select by contrib, cos2 and name 
-   # as previously described for ind
-# Select the top 10 contributing variables
-fviz_mca_var(res.mca, select.var = list(contrib = 10))
     
 # Biplot
 # ++++++++++++++++++++++++++
 grp <- as.factor(poison.active[, "Vomiting"])
 fviz_mca_biplot(res.mca, repel = TRUE, col.var = "#E7B800",
- habillage = grp, addEllipses = TRUE, ellipse.level = 0.95)+
- theme_minimal()
+ habillage = grp, addEllipses = TRUE, ellipse.level = 0.95)
  
  \dontrun{
 # Keep only the labels for variable categories: 
@@ -283,13 +235,11 @@ fviz_mca_biplot(res.mca, invisible ="var")
 fviz_mca_biplot(res.mca, invisible ="ind")
 
 # Control automatically the color of individuals using the cos2
-fviz_mca_biplot(res.mca, label ="var", col.ind="cos2") +
-       theme_minimal()
+fviz_mca_biplot(res.mca, label ="var", col.ind="cos2")
        
 # Change the color by groups, add ellipses
 fviz_mca_biplot(res.mca, label="var", col.var ="blue",
-   habillage=grp, addEllipses=TRUE, ellipse.level=0.95) + 
-   theme_minimal() 
+   habillage=grp, addEllipses=TRUE, ellipse.level=0.95)
                
 # Select the top 30 contributing individuals
 # And the top 10 variables
