@@ -1,3 +1,58 @@
+# factoextra 1.0.5
+     
+## Bug fixes
+   
+- Now, the argument `invisible` works properly in the function `fviz_pca_biplot()`([@ginolhac, #26](https://github.com/kassambara/factoextra/issues/26)).
+- The function `fviz_dend()` now works for an object of class `diana` ([@qfazille, #30](https://github.com/kassambara/factoextra/issues/30)).
+- Now, `fviz_cluster()` supports HCPC results ([@famuvie, #34](https://github.com/kassambara/factoextra/issues/34)).
+    
+## Minor changes
+   
+- New argument `mean.point` in the function `fviz()`. logical value. If TRUE, group mean points are added to the plot.
+- Now, PCA correlation circles have fixed coordinates so they don't appear as ellipses ([@scoavoux, #38](https://github.com/kassambara/factoextra/pull/38).
+- New argument `fill.ind` and `fill.var` added in `fviz_pca()` ([@ginolhac, #27](https://github.com/kassambara/factoextra/issues/27) and [@Confurious, #42](https://github.com/kassambara/factoextra/issues/42)).
+- New arguments `geom.ind` and `geom.var` in `fviz_pca_xxx()` and `fviz_mca_xxx()` functions to have more controls on the individuals/variables geometry in the functions `fviz_pca_biplot()` and `fviz_mca_biplot()` ([@Confurious, #42](https://github.com/kassambara/factoextra/issues/42)).
+- New arguments `geom.row` and `geom.col`  in `fviz_ca_xxx()` functions to have more controls on the individuals/variables geometry in the function `fviz_ca_biplot()` ([@Confurious, #42](https://github.com/kassambara/factoextra/issues/42)).
+- New argument `gradient.cols` in `fviz_pca_biplot()`
+- New argument `àxes` in `fviz_cluster`() to specify the dimension to plot.
+- New argument `circlesize` in the function `fviz()` to change the size of the variable correlation circle size.
+   
+- It's now possible to color individuals using a custom continuous variable ([#29](https://github.com/kassambara/factoextra/issues/29)). This is done using the argument **col.ind**.
+
+
+```r
+library(factoextra)
+data(iris)
+res.pca <- prcomp(iris[, -5],  scale = TRUE)
+
+# Visualize and color by a custom continuous variable
+fviz_pca_ind(res.pca, col.ind = iris$Sepal.Length,
+             legend.title = "Sepal.Length")
+```
+   
+   
+- factoextra can now handle Japanese characters by using the argument font.family = "HiraKakuProN-W3"` ([#31](https://github.com/kassambara/factoextra/issues/31)). For example:
+    
+    
+```r
+library(FactoMineR)
+library(factoextra)
+
+.tbl2.1 <- matrix(c(395, 2456,1758,
+                    147, 153, 916, 
+                    694, 327, 1347),byrow=T,3,3)
+dimnames(.tbl2.1) <- list(地域=c("オスロ","中部地域","北部地域"),
+                            犯罪=c("強盗", "詐欺","破壊") )
+
+
+res.CA <- CA(.tbl2.1,graph=FALSE)
+
+fviz_ca_biplot(res.CA,map="simbiplot",title="simbiplot",
+               font.family = "HiraKakuProN-W3")
+```
+
+
+   
 # factoextra 1.0.4
 
 ## New features

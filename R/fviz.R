@@ -1,76 +1,97 @@
 #' @include utilities.R
 NULL
-#' Visualizing Multivariate Analyse Outputs
-#' @description Generic function to create a scatter plot of multivariate analyse outputs, including PCA, CA, MCA and MFA.
-#' @inheritParams facto_summarize
-#' @param geom a text specifying the geometry to be used for the graph. Default value is "auto". Allowed 
-#'   values are the combination of c("point", "arrow", "text"). Use "point" (to 
-#'   show only points); "text" to show only labels; c("point", "text") or 
-#'   c("arrow", "text") to show both types.
-#' @param label a text specifying the elements to be labelled. Default value is 
-#'   "all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
-#'   "quali", "var", "quanti.sup", "group.sup"). "ind" can be used to label only active 
-#'   individuals. "ind.sup" is for supplementary individuals. "quali" is for 
-#'   supplementary qualitative variables. "var" is for active variables. 
-#'   "quanti.sup" is for quantitative supplementary variables.
-#' @param invisible a text specifying the elements to be hidden on the plot. 
-#'   Default value is "none". Allowed values are the combination of c("ind", 
-#'   "ind.sup", "quali", "var", "quanti.sup", "group.sup").
-#' @param labelsize font size for the labels
-#' @param pointsize the size of points
-#' @param pointshape the shape of points
-#' @param arrowsize the size of arrows. Controls the thickness of arrows.
-#' @param title the title of the graph
-#' @param repel a boolean, whether to use ggrepel to avoid overplotting text 
-#'   labels or not.
-#' @param habillage an optional factor variable for coloring the observations by
-#'   groups. Default value is "none". If X is a PCA object from FactoMineR 
-#'   package, habillage can also specify the supplementary qualitative variable 
-#'   (by its index or name) to be used for coloring individuals by groups (see 
-#'   ?PCA in FactoMineR).
-#' @param addEllipses logical value. If TRUE, draws ellipses around the 
-#'   individuals when habillage != "none".
-#' @param ellipse.level the size of the concentration ellipse in normal 
-#'   probability.
-#' @param ellipse.type Character specifying frame type. Possible values are 
-#'   'convex' or types supporeted by \code{\link[ggplot2]{stat_ellipse}} 
-#'   including one of c("t", "norm", "euclid").
-#' @param ellipse.alpha Alpha for ellipse specifying the transparency level of 
-#'   fill color. Use alpha = 0 for no fill color.
-#' @param col.circle a color for the correlation circle. Used only when X is a PCA output.
-#' @param axes.linetype linetype of x and y axes.
-#' @param color color to be used for the specified geometries (point, text). 
-#'   Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
-#'   this case, the colors for individuals/variables are automatically 
-#'   controlled by their qualities of representation ("cos2"), contributions 
-#'   ("contrib"), coordinates (x^2+y^2, "coord"), x values ("x") or y values 
-#'   ("y"). To use automatic coloring (by cos2, contrib, ....), make sure that 
-#'   habillage ="none".
-#' @param alpha controls the transparency of individual and 
-#'   variable colors, respectively. The value can variate from 0 (total 
-#'   transparency) to 1 (no transparency). Default value is 1. Possible values 
-#'   include also : "cos2", "contrib", "coord", "x" or "y". In this case, the 
-#'   transparency for the individual/variable colors are automatically 
-#'   controlled by their qualities ("cos2"), contributions ("contrib"), 
-#'   coordinates (x^2+y^2, "coord"), x values("x") or y values("y"). To use 
-#'   this, make sure that habillage ="none".
+#'Visualizing Multivariate Analyse Outputs
+#'@description Generic function to create a scatter plot of multivariate analyse
+#'  outputs, including PCA, CA, MCA and MFA.
+#'@inheritParams facto_summarize
+#'@param geom a text specifying the geometry to be used for the graph. Default 
+#'  value is "auto". Allowed values are the combination of c("point", "arrow", 
+#'  "text"). Use "point" (to show only points); "text" to show only labels; 
+#'  c("point", "text") or c("arrow", "text") to show both types.
+#'@param label a text specifying the elements to be labelled. Default value is 
+#'  "all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
+#'  "quali", "var", "quanti.sup", "group.sup"). "ind" can be used to label only 
+#'  active individuals. "ind.sup" is for supplementary individuals. "quali" is 
+#'  for supplementary qualitative variables. "var" is for active variables. 
+#'  "quanti.sup" is for quantitative supplementary variables.
+#'@param invisible a text specifying the elements to be hidden on the plot. 
+#'  Default value is "none". Allowed values are the combination of c("ind", 
+#'  "ind.sup", "quali", "var", "quanti.sup", "group.sup").
+#'@param labelsize font size for the labels
+#'@param pointsize the size of points
+#'@param pointshape the shape of points
+#'@param arrowsize the size of arrows. Controls the thickness of arrows.
+#'@param title the title of the graph
+#'@param repel a boolean, whether to use ggrepel to avoid overplotting text 
+#'  labels or not.
+#'@param habillage an optional factor variable for coloring the observations by 
+#'  groups. Default value is "none". If X is a PCA object from FactoMineR 
+#'  package, habillage can also specify the supplementary qualitative variable 
+#'  (by its index or name) to be used for coloring individuals by groups (see 
+#'  ?PCA in FactoMineR).
+#'@param addEllipses logical value. If TRUE, draws ellipses around the 
+#'  individuals when habillage != "none".
+#'@param ellipse.level the size of the concentration ellipse in normal 
+#'  probability.
+#'@param ellipse.type Character specifying frame type. Possible values are 
+#'  \code{"convex"}, \code{"confidence"} or types supported by 
+#'  \code{\link[ggplot2]{stat_ellipse}()} including one of \code{c("t", "norm", 
+#'  "euclid")} for plotting concentration ellipses.
+#'  
+#'  \itemize{ \item \code{"convex"}: plot convex hull of a set o points. \item 
+#'  \code{"confidence"}: plot confidence ellipses arround group mean points as
+#'  \code{\link[FactoMineR]{coord.ellipse}()}[in FactoMineR]. \item \code{"t"}:
+#'  assumes a multivariate t-distribution. \item \code{"norm"}: assumes a
+#'  multivariate normal distribution. \item \code{"euclid"}: draws a circle with
+#'  the radius equal to level, representing the euclidean distance from the
+#'  center. This ellipse probably won't appear circular unless
+#'  \code{\link[ggplot2]{coord_fixed}()} is applied.}
+#'  
+#'  
+#'@param ellipse.alpha Alpha for ellipse specifying the transparency level of 
+#'  fill color. Use alpha = 0 for no fill color.
+#'@param mean.point logical value. If TRUE (default), group mean points are 
+#'  added to the plot.
+#'@param col.circle a color for the correlation circle. Used only when X is a 
+#'  PCA output.
+#'@param circlesize the size of the variable correlation circle.
+#'@param axes.linetype linetype of x and y axes.
+#'@param color color to be used for the specified geometries (point, text). Can 
+#'  be a continuous variable or a factor variable. Possible values include also 
+#'  : "cos2", "contrib", "coord", "x" or "y". In this case, the colors for 
+#'  individuals/variables are automatically controlled by their qualities of 
+#'  representation ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, 
+#'  "coord"), x values ("x") or y values ("y"). To use automatic coloring (by 
+#'  cos2, contrib, ....), make sure that habillage ="none".
+#'@param fill same as the argument \code{color}, but for point fill color. 
+#'  Useful when pointshape = 21, for example.
+#'@param alpha controls the transparency of individual and variable colors, 
+#'  respectively. The value can variate from 0 (total transparency) to 1 (no 
+#'  transparency). Default value is 1. Possible values include also : "cos2", 
+#'  "contrib", "coord", "x" or "y". In this case, the transparency for the 
+#'  individual/variable colors are automatically controlled by their qualities 
+#'  ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, "coord"), x 
+#'  values("x") or y values("y"). To use this, make sure that habillage ="none".
 #'@param col.col.sup,col.row.sup colors for the supplementary column and row 
 #'  points, respectively.
-#' @param select a selection of individuals/variables to be 
-#'   drawn. Allowed values are NULL or a list containing the arguments name, 
-#'   cos2 or contrib: \itemize{ \item name: is a character vector containing 
-#'   individuals/variables to be drawn \item cos2: if cos2 is in [0, 1], ex: 
-#'   0.6, then individuals/variables with a cos2 > 0.6 are drawn. if cos2 > 1, 
-#'   ex: 5, then the top 5 individuals/variables with the highest cos2 are 
-#'   drawn. \item contrib: if contrib > 1, ex: 5,  then the top 5 
-#'   individuals/variables with the highest contrib are drawn }
-#' @inheritParams ggpubr::ggpar
-#' @param ... Arguments to be passed to the functions ggpubr::ggscatter() & ggpubr::ggpar().
-#'   
-#' @return a ggplot
-#' @author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
-#' 
-#' @rdname fviz
+#'@param select a selection of individuals/variables to be drawn. Allowed values
+#'  are NULL or a list containing the arguments name, cos2 or contrib: \itemize{
+#'  \item name: is a character vector containing individuals/variables to be 
+#'  drawn \item cos2: if cos2 is in [0, 1], ex: 0.6, then individuals/variables 
+#'  with a cos2 > 0.6 are drawn. if cos2 > 1, ex: 5, then the top 5 
+#'  individuals/variables with the highest cos2 are drawn. \item contrib: if 
+#'  contrib > 1, ex: 5,  then the top 5 individuals/variables with the highest 
+#'  contrib are drawn }
+#'@param ggp a ggplot. If not NULL, points are added to an existing plot.
+#'@inheritParams ggpubr::ggpar
+#'@param font.family character vector specifying font family.
+#'@param ... Arguments to be passed to the functions ggpubr::ggscatter() & 
+#'  ggpubr::ggpar().
+#'  
+#'@return a ggplot
+#'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
+#'  
+#'@rdname fviz
 #' @examples
 #' \donttest{
 #' # Principal component analysis
@@ -102,22 +123,24 @@ NULL
 #' fviz(res.mca, "var") # Variables plot
 #' 
 #'  }
-#' @export
+#'@export
 fviz <- function(X, element, axes = c(1, 2), geom = "auto",
                           label = "all", invisible="none", labelsize=4, 
                           pointsize = 1.5, pointshape = 19, arrowsize = 0.5,
                           habillage="none", addEllipses=FALSE, ellipse.level = 0.95, 
-                          ellipse.type = "norm", ellipse.alpha = 0.1,
-                          color = "black", alpha = 1, gradient.cols = NULL,
+                          ellipse.type = "norm", ellipse.alpha = 0.1, mean.point = TRUE,
+                          color = "black", fill = "white", alpha = 1, gradient.cols = NULL,
                           col.row.sup = "darkblue", col.col.sup="darkred",
                           select = list(name = NULL, cos2 = NULL, contrib = NULL),
                           title = NULL, axes.linetype = "dashed",
-                          repel = FALSE, col.circle ="grey70", ggtheme = theme_minimal(),
+                          repel = FALSE, col.circle ="grey70", circlesize = 0.5, ggtheme = theme_minimal(),
+                          ggp = NULL, font.family = "",
                            ...)
   {
   
   .check_axes(axes, .length = 2)
   facto.class <- .get_facto_class(X)
+    
   # Deprecated arguments: jitter
   extra_args <- list(...)
   if(!is.null(extra_args$jitter)) repel <- .facto_dep("jitter", "repel", TRUE)
@@ -158,12 +181,32 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   else if(element == "group" & facto.class == "HMFA") summary.res <- "coord"
   df <- facto_summarize(X, element = element, axes = axes, result = summary.res)
   colnames(df)[2:3] <-  c("x", "y")
-  # augment data, if qualitative variable is used to color points by groups
+  # Color by grouping variables
+  #::::::::::::::::::::::::::::::::::::::
+  is_grouping_var_exists <- !("none" %in% habillage) | .is_grouping_var(color) | .is_grouping_var(fill)
+  # Augment data, if qualitative variable is used to color points by groups
   if(!("none" %in% habillage)){
     dd <- .add_ind_groups(X, df, habillage)
     df <- dd$ind
     color <- dd$name.quali
     if(missing(pointshape)) pointshape <- dd$name.quali
+  }
+  # Augment data if color is a continuous variable or a factor variable
+  if(length(color) > 1){
+    if(nrow(df) != length(color)) stop("The length of color variable",
+                                    "should be the same as the number of rows in the data.")
+    .col.name <- "Col."
+    df[[.col.name]] <- color
+    if(missing(pointshape) & .is_grouping_var(color)) pointshape <- .col.name
+    color <- .col.name
+  }
+  # Augment data if fill is a continuous variable or a factor variable
+  if(length(fill) > 1){
+    if(nrow(df) != length(fill)) stop("The length of fill variable",
+                                       "should be the same as the number of rows in the data.")
+    .col.name <- "Fill."
+    df[[.col.name]] <- fill
+    fill <- .col.name
   }
   # Selection
   df.all <- df
@@ -181,26 +224,34 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   }
   # Main plot
   #%%%%%%%%%%%%%%%%%%%
+  is.pca.var <- element == "var" & facto.class == "PCA" # We don't want meanpoint for PCA variables colored by groups
   point <- ("point" %in% geom) & (!hide[[element]]) # to show points, should be TRUE
-  mean.point <- (!("none" %in% habillage)) & ("point" %in% geom) & (!hide[["quali"]]) # to show mean point
+  if(missing(mean.point))
+    mean.point <- (is_grouping_var_exists & !is.pca.var) & ("point" %in% geom) & (!hide[["quali"]]) # to show mean point
   if(element == "quanti.var") mean.point <- FALSE # MFA, don't show the mean point of groups of variables
   
   label <- NULL
   if(lab[[element]] & "text" %in% geom & !hide[[element]]) label <- "name"
   
   p <- ggplot() 
-  if(hide[[element]]) p <-ggplot()+geom_blank(data = df, aes_string("x","y"))
+  if(hide[[element]]) {
+    if(is.null(ggp)) p <-ggplot()+geom_blank(data = df, aes_string("x","y"))
+    else p <- ggp
+  }
   else p <- ggpubr::ggscatter(data = df, x = "x", y = "y",
-                         color = color,  alpha = alpha, shape = pointshape, 
+                         color = color, fill = fill,  alpha = alpha, shape = pointshape, 
                          point = point, size = pointsize, mean.point = mean.point,
                          label = label, font.label = labelsize*3, repel = repel,
                          ellipse = addEllipses, ellipse.type = ellipse.type,
                          ellipse.alpha = ellipse.alpha, ellipse.level = ellipse.level,
-                         main = title, ggtheme = ggtheme, ...)
+                         main = title, ggtheme = ggtheme, ggp = ggp, font.family = font.family, ...)
   if(alpha %in% c("cos2","contrib", "coord", "x", "y"))
     p <- p + scale_alpha(limits = range(df.all[, alpha]))
-  if(!is.null(gradient.cols) & color %in% c("cos2","contrib", "coord", "x", "y"))
-    p <- p + ggpubr:::.gradient_col(gradient.cols)
+  
+  if(!is.null(gradient.cols))
+    p <- p + ggpubr::gradient_color(gradient.cols)
+    
+    
   if(is.null(extra_args$legend)) p <- p + theme(legend.position = "right" )
   # Add arrows
   if("arrow" %in% geom & !hide[[element]]) 
@@ -208,10 +259,10 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   # Add correlation circle if PCA & element = "var" & scale = TRUE
   if(facto.class == "PCA" & element == "var"){
     if(.get_scale_unit(X) & is.null(extra_args$scale.)) 
-      p <- .add_corr_circle(p, color = col.circle)
+      p <- .add_corr_circle(p, color = col.circle, size = circlesize)
   }
   else if(facto.class %in% c("MCA", "MFA", "HMFA", "FAMD") & element %in% c("quanti.sup", "quanti.var", "partial.axes")){
-      p <- .add_corr_circle(p, color = col.circle)
+      p <- .add_corr_circle(p, color = col.circle, size = circlesize)
   }
   # Faceting when multiple variables are used to color individuals
   # (e.g., habillage = 1:2, or data.frame)
@@ -240,7 +291,7 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   if(!is.null(esup)) p <- .add_supp (p, X, element = esup$name, axes = axes, select = select,
                                 geom = geom, color = esup$color, shape = esup$shape, pointsize = pointsize,
                                 labelsize = labelsize, addlabel = esup$addlabel, repel = repel, linetype = 2,
-                                scale. = scale., ca_map = ca_map)
+                                scale. = scale., ca_map = ca_map, font.family = font.family)
   
   
   p <- .fviz_finish(p, X, axes, axes.linetype, ...) +
@@ -253,6 +304,30 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
 #+++++++++++++++++++++
 # Helper functions
 #+++++++++++++++++++++
+
+
+# Check if fill/color variable is continous in the context of PCA
+.is_continuous_var <- function(x){
+  x[1] %in% c("cos2", "contrib", "x", "y") | is.numeric(x)
+}
+
+.is_grouping_var <- function(x){
+  length(x) > 1 & (is.character(x) | is.factor(x))
+}
+# Check if is continuous or grouping variable in the context of PCA
+.is_variable <- function(x){
+  .is_continuous_var(x) | .is_grouping_var(x)
+}
+
+
+# Check if character string is a valid color representation
+.is_color <- function(x) {
+  sapply(x, function(X) {
+    tryCatch(is.matrix(grDevices::col2rgb(X)),
+             error = function(e) FALSE)
+  })
+}
+
 
 # X : an object of class PCA, princomp, prcomp, dudi, expoOutput
 # Return TRUE if the data are scaled to unit variance
@@ -271,11 +346,13 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
 }
 
 # Add correlation circle to variables plot
-.add_corr_circle <- function(p, color = "grey70"){
+.add_corr_circle <- function(p, color = "grey70", size = 0.5){
   theta <- c(seq(-pi, pi, length = 50), seq(pi, -pi, length = 50))
   circle <- data.frame(xcircle = cos(theta), ycircle = sin(theta))
   p + 
-    geom_path(mapping = aes_string("xcircle", "ycircle"), data = circle, color = color)
+    geom_path(mapping = aes_string("xcircle", "ycircle"), data = circle, color = color,
+              size = size) +
+    coord_fixed()
   
 }
 
@@ -308,8 +385,8 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   if(element == "ind" & inherits(X, c('PCA', "MCA", "MFA", "FAMD")) & !hide$ind.sup)
     res <- list(name = "ind.sup", addlabel = (lab$ind.sup & "text" %in% geom))
   # Supplementary quantitative variables
-  else if(element == "var" & inherits(X, 'PCA') & !hide$quanti)
-    res <- list(name = "quanti", addlabel = (lab$quanti & "text" %in% geom))
+  else if(element == "var" & inherits(X, 'PCA') & !hide$quanti.sup)
+    res <- list(name = "quanti", addlabel = (lab$quanti.sup & "text" %in% geom))
   else if(element == "mca.cor" & inherits(X, 'MCA') & !hide$quanti)
     res <- list(name = c("quanti.sup", "quali.sup$eta2"), addlabel = (lab$quanti & "text" %in% geom))
   else if(element %in% "var" & inherits(X, 'MCA') & !hide$quali.sup)
@@ -332,4 +409,5 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   res$shape <- shape.sup
   res
 }
+
 

@@ -5,15 +5,20 @@ NULL
 #'@description Multiple Correspondence Analysis (MCA) is an extension of simple 
 #'  CA to analyse a data table containing more than two categorical variables. 
 #'  fviz_mca() provides ggplot2-based elegant visualization of MCA outputs from 
-#'  the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in ExPosition]. Read more: 
+#'  the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in
+#'  ExPosition]. Read more: 
 #'  \href{http://www.sthda.com/english/wiki/multiple-correspondence-analysis-essentials-interpretation-and-application-to-investigate-the-associations-between-categories-of-multiple-qualitative-variables-r-software-and-data-mining}{Multiple
 #'   Correspondence Analysis Essentials.}
 #'  
 #'  \itemize{ \item{fviz_mca_ind(): Graph of individuals} \item{fviz_mca_var(): 
 #'  Graph of variables} \item{fviz_mca_biplot(): Biplot of individuals and 
 #'  variables} \item{fviz_mca(): An alias of fviz_mca_biplot()}}
-#'@param X an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA [ExPosition].
+#'@param X an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA
+#'  [ExPosition].
 #'@inheritParams fviz_pca
+#' @param geom.ind,geom.var as \code{geom} but for individuals and variables,
+#'   respectively. Default is geom.ind = c("point", "text), geom.var =
+#'   c("point", "text").
 #'@param label a text specifying the elements to be labelled. Default value is 
 #'  "all". Allowed values are "none" or the combination of c("ind", 
 #'  "ind.sup","var", "quali.sup",  "quanti.sup"). "ind" can be used to label 
@@ -28,12 +33,13 @@ NULL
 #'  groups. Default value is "none". If X is an MCA object from FactoMineR 
 #'  package, habillage can also specify the index of the factor variable in the 
 #'  data.
-#'@param col.ind,col.var color for individuals and variables, respectively. 
-#'  Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
-#'  this case, the colors for individuals/variables are automatically controlled
-#'  by their qualities ("cos2"), contributions ("contrib"), coordinates (x^2 + 
-#'  y^2 , "coord"), x values("x") or y values("y"). To use automatic coloring 
-#'  (by cos2, contrib, ....), make sure that habillage ="none".
+#'@param col.ind,col.var color for individuals and variables, respectively. Can 
+#'  be a continuous variable or a factor variable. Possible values include also
+#'  : "cos2", "contrib", "coord", "x" or "y". In this case, the colors for
+#'  individuals/variables are automatically controlled by their qualities
+#'  ("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 , "coord"), x
+#'  values("x") or y values("y"). To use automatic coloring (by cos2, contrib,
+#'  ....), make sure that habillage ="none".
 #'@param alpha.ind,alpha.var controls the transparency of individual and 
 #'  variable colors, respectively. The value can variate from 0 (total 
 #'  transparency) to 1 (no transparency). Default value is 1. Possible values 
@@ -48,9 +54,9 @@ NULL
 #'@param repel a boolean, whether to use ggrepel to avoid overplotting text 
 #'  labels or not.
 #'@param choice the graph to plot. Allowed values include: i) "var" and 
-#'  "mca.cor" for plotting the correlation between variables and principal
-#'  dimensions; ii) "var.cat" for variable categories and iii) "quanti.sup" for the
-#'  supplementary quantitative variables.
+#'  "mca.cor" for plotting the correlation between variables and principal 
+#'  dimensions; ii) "var.cat" for variable categories and iii) "quanti.sup" for
+#'  the supplementary quantitative variables.
 #'@param title the title of the graph
 #'@param select.ind,select.var a selection of individuals/variables to be drawn.
 #'  Allowed values are NULL or a list containing the arguments name, cos2 or 
@@ -192,7 +198,7 @@ NULL
 #'@name fviz_mca
 #'@rdname fviz_mca
 #'@export
-fviz_mca_ind <- function(X,  axes = c(1,2), geom=c("point", "text"), repel = FALSE,
+fviz_mca_ind <- function(X,  axes = c(1,2), geom=c("point", "text"), geom.ind = geom, repel = FALSE,
                          habillage = "none", palette = NULL, addEllipses = FALSE, 
                          col.ind = "blue", col.ind.sup = "darkblue", alpha.ind = 1,
                          shape.ind = 19, map ="symmetric", 
@@ -200,7 +206,7 @@ fviz_mca_ind <- function(X,  axes = c(1,2), geom=c("point", "text"), repel = FAL
                          ...)
 {
   
-  fviz (X, element = "ind", axes = axes, geom = geom, habillage = habillage, 
+  fviz (X, element = "ind", axes = axes, geom = geom.ind, habillage = habillage, 
         addEllipses = addEllipses, palette = palette, pointshape = shape.ind,
         color = col.ind, alpha = alpha.ind,
         shape.sup = shape.ind, col.row.sup = col.ind.sup,
@@ -213,7 +219,7 @@ fviz_mca_ind <- function(X,  axes = c(1,2), geom=c("point", "text"), repel = FAL
 #' @rdname fviz_mca
 #' @export 
 fviz_mca_var <- function(X, choice = c("var.cat", "mca.cor", "var", "quanti.sup"), 
-                         axes=c(1,2), geom = c("point", "text"), repel = FALSE, 
+                         axes=c(1,2), geom = c("point", "text"), geom.var = geom, repel = FALSE, 
                          col.var="red", alpha.var=1, shape.var = 17, col.quanti.sup = "blue", 
                          col.quali.sup = "darkgreen",  map = "symmetric", 
                          select.var = list(name = NULL, cos2 = NULL, contrib = NULL), ...)
@@ -236,7 +242,7 @@ fviz_mca_var <- function(X, choice = c("var.cat", "mca.cor", "var", "quanti.sup"
     if(missing(geom)) geom <- c("arrow", "text")
     if(missing(col.var)) col.var <- col.quanti.sup
   }
-  fviz (X, element = choice, axes = axes, geom = geom,
+  fviz (X, element = choice, axes = axes, geom = geom.var,
         color = col.var, alpha = alpha.var,  pointshape = shape.var, 
         shape.sup = shape.var, col.col.sup = col.col.sup, 
         select = select.var, repel = repel,  map = map, ...)
@@ -247,6 +253,7 @@ fviz_mca_var <- function(X, choice = c("var.cat", "mca.cor", "var", "quanti.sup"
 #' @rdname fviz_mca
 #' @export
 fviz_mca_biplot <- function(X,  axes = c(1,2), geom = c("point", "text"),
+                            geom.ind = geom, geom.var = geom,
                             repel = FALSE, label = "all", invisible="none",
                             habillage="none", addEllipses=FALSE, palette = NULL,
                             arrows = c(FALSE, FALSE), map ="symmetric", 
@@ -254,14 +261,14 @@ fviz_mca_biplot <- function(X,  axes = c(1,2), geom = c("point", "text"),
 {
   
   # Individuals
-  geom2 <- geom
+  geom2 <- geom.ind
   if(arrows[1]==TRUE) geom2 <- setdiff(unique(c(geom2, "arrow")), "point")
   p <- fviz_mca_ind(X,  axes = axes, geom = geom2, repel = repel,
                     label = label, invisible=invisible, habillage = habillage,
                     addEllipses = addEllipses, palette = palette,  ...)
     
   # Variable
-  geom2 <- geom
+  geom2 <- geom.var
   if(arrows[2]==TRUE) geom2 <- setdiff(unique(c(geom2, "arrow")), "point")
   # Add variables
   p <- fviz_mca_var(X, axes = axes, geom =  geom2, repel = repel, 

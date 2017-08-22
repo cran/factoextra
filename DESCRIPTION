@@ -1,8 +1,8 @@
 Package: factoextra
 Type: Package
 Title: Extract and Visualize the Results of Multivariate Data Analyses
-Version: 1.0.4
-Date: 2017-01-08
+Version: 1.0.5
+Date: 2017-08-22
 Authors@R: c(
     person("Alboukadel", "Kassambara", role = c("aut", "cre"), email = "alboukadel.kassambara@gmail.com"),
     person("Fabian", "Mundt", role = c("aut"), email = "f.mundt@inventionate.de")
@@ -16,9 +16,9 @@ Description: Provides some easy-to-use functions to extract and visualize the
     elegant data visualization.
 License: GPL-2
 LazyData: true
-Depends: R (>= 3.1.0), ggplot2 (>= 2.2.0)
-Imports: abind, cluster, dendextend, FactoMineR, ggpubr, grid, stats,
-        reshape2, ggrepel, tidyr
+Depends: R (>= 3.1.2), ggplot2 (>= 2.2.0)
+Imports: abind, cluster, dendextend, FactoMineR, ggpubr(>= 0.1.5),
+        grid, stats, reshape2, ggrepel, tidyr
 Suggests: ade4, ca, igraph, MASS, knitr, mclust
 URL: http://www.sthda.com/english/rpkgs/factoextra
 BugReports: https://github.com/kassambara/factoextra/issues
@@ -31,12 +31,12 @@ Collate: 'cluster_utilities.R' 'decathlon2.R' 'print.factoextra.R'
         'get_mca.R' 'fviz_mca.R' 'fviz_mclust.R' 'fviz_nbclust.R'
         'fviz_pca.R' 'fviz_silhouette.R' 'get_ca.R'
         'get_clust_tendency.R' 'get_famd.R' 'hkmeans.R' 'housetasks.R'
-        'multishapes.R' 'poison.R'
-RoxygenNote: 5.0.1
+        'multishapes.R' 'poison.R' 'zzz.R'
+RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2017-01-09 00:25:16 UTC; kassambara
+Packaged: 2017-08-22 14:12:22 UTC; kassambara
 Author: Alboukadel Kassambara [aut, cre],
   Fabian Mundt [aut]
 Maintainer: Alboukadel Kassambara <alboukadel.kassambara@gmail.com>
 Repository: CRAN
-Date/Publication: 2017-01-09 09:49:46
+Date/Publication: 2017-08-22 16:11:27 UTC

@@ -4,13 +4,14 @@
 \alias{fviz_famd}
 \alias{fviz_famd_ind}
 \alias{fviz_famd_var}
+\alias{fviz_famd}
 \title{Visualize Factor Analysis of Mixed Data}
 \usage{
 fviz_famd_ind(X, axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
   habillage = "none", palette = NULL, addEllipses = FALSE,
   col.ind = "blue", col.ind.sup = "darkblue", alpha.ind = 1,
   shape.ind = 19, col.quali.var = "black", select.ind = list(name = NULL,
-  cos2 = NULL, contrib = NULL), ...)
+  cos2 = NULL, contrib = NULL), gradient.cols = NULL, ...)
 
 fviz_famd_var(X, choice = c("var", "quanti.var", "quali.var"), axes = c(1,
   2), geom = c("point", "text"), repel = FALSE, col.var = "red",
@@ -26,9 +27,11 @@ fviz_famd(X, ...)
 plotted.}
 
 \item{geom}{a text specifying the geometry to be used for the graph. Allowed 
-values are the combination of c("point", "arrow", "text"). Use "point" (to 
-show only points); "text" to show only labels; c("point", "text") or 
-c("arrow", "text") to show both types.}
+values are the combination of \code{c("point", "arrow", "text")}. Use 
+\code{"point"} (to show only points); \code{"text"} to show only labels; 
+\code{c("point", "text")} or \code{c("arrow", "text")} to show arrows and 
+texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
+variables.}
 
 \item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
 labels or not.}
@@ -43,18 +46,20 @@ groups. Allowed values include "grey" for grey color palettes; brewer
 palettes e.g. "RdBu", "Blues", ...; or custom color palette e.g. c("blue",
 "red"); and scientific journal palettes from ggsci R package, e.g.: "npg",
 "aaas", "lancet", "jco", "ucscgb", "uchicago", "simpsons" and
-"rickandmorty".}
+"rickandmorty". Can be also a numeric vector of length(groups); in this
+case a basic color palette is created using the function
+\link[grDevices]{palette}.}
 
 \item{addEllipses}{logical value. If TRUE, draws ellipses around the 
 individuals when habillage != "none".}
 
-\item{col.ind, col.var}{color for individuals and variables, respectively. 
-Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
-this case, the colors for individuals/variables are automatically 
-controlled by their qualities ("cos2"), contributions ("contrib"), 
-coordinates (x^2 + y^2 , "coord"), x values("x") or y values("y"). To use 
-automatic coloring (by cos2, contrib, ....), make sure that habillage 
-="none".}
+\item{col.ind, col.var}{color for individuals and variables, respectively. Can
+be a continuous variable or a factor variable. Possible values include also
+: "cos2", "contrib", "coord", "x" or "y". In this case, the colors for
+individuals/variables are automatically controlled by their qualities
+("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 , "coord"), x
+values("x") or y values("y"). To use automatic coloring (by cos2, contrib,
+....), make sure that habillage ="none".}
 
 \item{col.ind.sup}{color for supplementary individuals}
 
@@ -82,6 +87,9 @@ then the top 5 individuals/variables with the highest cos2 are drawn. \item
 contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with 
 the highest cos2 are drawn }}
 
+\item{gradient.cols}{vector of colors to use for n-colour gradient. Allowed
+values include brewer and ggsci color palettes.}
+
 \item{...}{Arguments to be passed to the function fviz()}
 
 \item{choice}{The graph to plot inf fviz_mfa_var(). Allowed values include 
@@ -94,11 +102,12 @@ a ggplot
 }
 \description{
 Factor analysis of mixed data (FAMD) is, a particular case of 
-MFA, used to analyze a data set containing both quantitative and qualitative 
-variables. fviz_famd() provides ggplot2-based elegant visualization of FAMD
-outputs from the R function: FAMD [FactoMineR].\cr\cr \itemize{
-\item{fviz_famd_ind(): Graph of individuals} \item{fviz_famd_var(): Graph of
-variables} \item{fviz_famd(): An alias of fviz_famd_ind(res.famd)} }
+  MFA, used to analyze a data set containing both quantitative and
+  qualitative variables. fviz_famd() provides ggplot2-based elegant
+  visualization of FAMD outputs from the R function: FAMD [FactoMineR].\cr\cr
+  \itemize{ \item{fviz_famd_ind(): Graph of individuals}
+  \item{fviz_famd_var(): Graph of variables} \item{fviz_famd(): An alias of
+  fviz_famd_ind(res.famd)} }
 }
 \examples{
 # Compute FAMD
@@ -124,4 +133,3 @@ fviz_famd_ind(res.famd, col.ind = "cos2",
 \author{
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
 }
-

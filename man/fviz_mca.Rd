@@ -2,40 +2,49 @@
 % Please edit documentation in R/fviz_mca.R
 \name{fviz_mca}
 \alias{fviz_mca}
-\alias{fviz_mca_biplot}
 \alias{fviz_mca_ind}
 \alias{fviz_mca_var}
+\alias{fviz_mca_biplot}
+\alias{fviz_mca}
 \title{Visualize Multiple Correspondence Analysis}
 \usage{
-fviz_mca_ind(X, axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
-  habillage = "none", palette = NULL, addEllipses = FALSE,
-  col.ind = "blue", col.ind.sup = "darkblue", alpha.ind = 1,
-  shape.ind = 19, map = "symmetric", select.ind = list(name = NULL, cos2 =
-  NULL, contrib = NULL), ...)
+fviz_mca_ind(X, axes = c(1, 2), geom = c("point", "text"),
+  geom.ind = geom, repel = FALSE, habillage = "none", palette = NULL,
+  addEllipses = FALSE, col.ind = "blue", col.ind.sup = "darkblue",
+  alpha.ind = 1, shape.ind = 19, map = "symmetric",
+  select.ind = list(name = NULL, cos2 = NULL, contrib = NULL), ...)
 
 fviz_mca_var(X, choice = c("var.cat", "mca.cor", "var", "quanti.sup"),
-  axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
-  col.var = "red", alpha.var = 1, shape.var = 17,
+  axes = c(1, 2), geom = c("point", "text"), geom.var = geom,
+  repel = FALSE, col.var = "red", alpha.var = 1, shape.var = 17,
   col.quanti.sup = "blue", col.quali.sup = "darkgreen", map = "symmetric",
   select.var = list(name = NULL, cos2 = NULL, contrib = NULL), ...)
 
 fviz_mca_biplot(X, axes = c(1, 2), geom = c("point", "text"),
-  repel = FALSE, label = "all", invisible = "none", habillage = "none",
-  addEllipses = FALSE, palette = NULL, arrows = c(FALSE, FALSE),
-  map = "symmetric", title = "MCA - Biplot", ...)
+  geom.ind = geom, geom.var = geom, repel = FALSE, label = "all",
+  invisible = "none", habillage = "none", addEllipses = FALSE,
+  palette = NULL, arrows = c(FALSE, FALSE), map = "symmetric",
+  title = "MCA - Biplot", ...)
 
 fviz_mca(X, ...)
 }
 \arguments{
-\item{X}{an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA [ExPosition].}
+\item{X}{an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA
+[ExPosition].}
 
 \item{axes}{a numeric vector of length 2 specifying the dimensions to be 
 plotted.}
 
 \item{geom}{a text specifying the geometry to be used for the graph. Allowed 
-values are the combination of c("point", "arrow", "text"). Use "point" (to 
-show only points); "text" to show only labels; c("point", "text") or 
-c("arrow", "text") to show both types.}
+values are the combination of \code{c("point", "arrow", "text")}. Use 
+\code{"point"} (to show only points); \code{"text"} to show only labels; 
+\code{c("point", "text")} or \code{c("arrow", "text")} to show arrows and 
+texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
+variables.}
+
+\item{geom.ind, geom.var}{as \code{geom} but for individuals and variables,
+respectively. Default is geom.ind = c("point", "text), geom.var =
+c("point", "text").}
 
 \item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
 labels or not.}
@@ -50,17 +59,20 @@ groups. Allowed values include "grey" for grey color palettes; brewer
 palettes e.g. "RdBu", "Blues", ...; or custom color palette e.g. c("blue",
 "red"); and scientific journal palettes from ggsci R package, e.g.: "npg",
 "aaas", "lancet", "jco", "ucscgb", "uchicago", "simpsons" and
-"rickandmorty".}
+"rickandmorty". Can be also a numeric vector of length(groups); in this
+case a basic color palette is created using the function
+\link[grDevices]{palette}.}
 
 \item{addEllipses}{logical value. If TRUE, draws ellipses around the 
 individuals when habillage != "none".}
 
-\item{col.ind, col.var}{color for individuals and variables, respectively. 
-Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
-this case, the colors for individuals/variables are automatically controlled
-by their qualities ("cos2"), contributions ("contrib"), coordinates (x^2 + 
-y^2 , "coord"), x values("x") or y values("y"). To use automatic coloring 
-(by cos2, contrib, ....), make sure that habillage ="none".}
+\item{col.ind, col.var}{color for individuals and variables, respectively. Can 
+be a continuous variable or a factor variable. Possible values include also
+: "cos2", "contrib", "coord", "x" or "y". In this case, the colors for
+individuals/variables are automatically controlled by their qualities
+("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 , "coord"), x
+values("x") or y values("y"). To use automatic coloring (by cos2, contrib,
+....), make sure that habillage ="none".}
 
 \item{col.ind.sup}{color for supplementary individuals}
 
@@ -95,9 +107,9 @@ fviz_mca(): Additional arguments are passed to fviz_mca_ind() and
 fviz_mca_var().}}
 
 \item{choice}{the graph to plot. Allowed values include: i) "var" and 
-"mca.cor" for plotting the correlation between variables and principal
-dimensions; ii) "var.cat" for variable categories and iii) "quanti.sup" for the
-supplementary quantitative variables.}
+"mca.cor" for plotting the correlation between variables and principal 
+dimensions; ii) "var.cat" for variable categories and iii) "quanti.sup" for
+the supplementary quantitative variables.}
 
 \item{col.quanti.sup, col.quali.sup}{a color for the quantitative/qualitative 
 supplementary variables.}
@@ -127,7 +139,8 @@ a ggplot
 Multiple Correspondence Analysis (MCA) is an extension of simple 
  CA to analyse a data table containing more than two categorical variables. 
  fviz_mca() provides ggplot2-based elegant visualization of MCA outputs from 
- the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in ExPosition]. Read more: 
+ the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in
+ ExPosition]. Read more: 
  \href{http://www.sthda.com/english/wiki/multiple-correspondence-analysis-essentials-interpretation-and-application-to-investigate-the-associations-between-categories-of-multiple-qualitative-variables-r-software-and-data-mining}{Multiple
   Correspondence Analysis Essentials.}
  
@@ -249,11 +262,10 @@ fviz_mca_biplot(res.mca,
 }
 
 }
-\author{
-Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
-}
 \seealso{
 \code{\link{get_mca}}, \code{\link{fviz_pca}}, \code{\link{fviz_ca}},
  \code{\link{fviz_mfa}}, \code{\link{fviz_hmfa}}
 }
-
+\author{
+Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
+}

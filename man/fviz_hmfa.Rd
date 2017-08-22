@@ -3,8 +3,9 @@
 \name{fviz_hmfa}
 \alias{fviz_hmfa}
 \alias{fviz_hmfa_ind}
-\alias{fviz_hmfa_quali_biplot}
 \alias{fviz_hmfa_var}
+\alias{fviz_hmfa_quali_biplot}
+\alias{fviz_hmfa}
 \title{Visualize Hierarchical Multiple Factor Analysis}
 \usage{
 fviz_hmfa_ind(X, axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
@@ -32,9 +33,11 @@ fviz_hmfa(X, ...)
 plotted.}
 
 \item{geom}{a text specifying the geometry to be used for the graph. Allowed 
-values are the combination of c("point", "arrow", "text"). Use "point" (to 
-show only points); "text" to show only labels; c("point", "text") or 
-c("arrow", "text") to show both types.}
+values are the combination of \code{c("point", "arrow", "text")}. Use 
+\code{"point"} (to show only points); \code{"text"} to show only labels; 
+\code{c("point", "text")} or \code{c("arrow", "text")} to show arrows and 
+texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
+variables.}
 
 \item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
 labels or not.}
@@ -51,12 +54,12 @@ individuals when habillage != "none".}
 respectively.}
 
 \item{col.ind, col.var}{color for individuals, partial individuals and 
-variables, respectively. Possible values include also : "cos2", "contrib", 
-"coord", "x" or "y". In this case, the colors for individuals/variables are 
-automatically controlled by their qualities ("cos2"), contributions 
-("contrib"), coordinates (x^2 + y^2 , "coord"), x values("x") or y 
-values("y"). To use automatic coloring (by cos2, contrib, ....), make sure 
-that habillage ="none".}
+variables, respectively. Can be a continuous variable or a factor variable.
+Possible values include also : "cos2", "contrib", "coord", "x" or "y". In
+this case, the colors for individuals/variables are automatically controlled
+by their qualities ("cos2"), contributions ("contrib"), coordinates (x^2 +
+y^2 , "coord"), x values("x") or y values("y"). To use automatic coloring
+(by cos2, contrib, ....), make sure that habillage ="none".}
 
 \item{col.ind.sup}{color for supplementary individuals}
 
@@ -104,12 +107,13 @@ variables and group of variables, respectively.}
 a ggplot
 }
 \description{
-Hierarchical Multiple Factor Analysis (HMFA) is, an extension of MFA, used
- in a situation where the data are organized into a hierarchical structure.  fviz_hmfa() provides ggplot2-based
- elegant visualization of HMFA outputs from the R function: HMFA [FactoMineR].\cr\cr \itemize{ \item{fviz_hmfa_ind(): Graph of
- individuals} \item{fviz_hmfa_var(): Graph of variables}
- \item{fviz_hmfa_quali_biplot(): Biplot of individuals and qualitative
- variables} \item{fviz_hmfa(): An alias of fviz_hmfa_ind()} }
+Hierarchical Multiple Factor Analysis (HMFA) is, an extension of
+ MFA, used in a situation where the data are organized into a hierarchical
+ structure.  fviz_hmfa() provides ggplot2-based elegant visualization of HMFA
+ outputs from the R function: HMFA [FactoMineR].\cr\cr \itemize{
+ \item{fviz_hmfa_ind(): Graph of individuals} \item{fviz_hmfa_var(): Graph of
+ variables} \item{fviz_hmfa_quali_biplot(): Biplot of individuals and
+ qualitative variables} \item{fviz_hmfa(): An alias of fviz_hmfa_ind()} }
 }
 \examples{
 # Hierarchical Multiple Factor Analysis
@@ -156,12 +160,11 @@ fviz_hmfa_ind(res.hmfa, partial = "all", palette = "Dark2")
  
 
 }
+\references{
+http://www.sthda.com/english/
+}
 \author{
 Fabian Mundt \email{f.mundt@inventionate.de}
 
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
 }
-\references{
-http://www.sthda.com/english/
-}
-

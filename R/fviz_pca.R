@@ -7,7 +7,8 @@
 #'   multivariate data, to two or three that can be visualized graphically with 
 #'   minimal loss of information. fviz_pca() provides ggplot2-based elegant 
 #'   visualization of PCA outputs from: i) prcomp and princomp [in built-in R 
-#'   stats], ii) PCA [in FactoMineR], iii) dudi.pca [in ade4] and epPCA [ExPosition]. Read more: 
+#'   stats], ii) PCA [in FactoMineR], iii) dudi.pca [in ade4] and epPCA 
+#'   [ExPosition]. Read more: 
 #'   \href{http://www.sthda.com/english/wiki/factominer-and-factoextra-principal-component-analysis-visualization-r-software-and-data-mining}{Principal
 #'    Component Analysis}
 #'   
@@ -15,14 +16,25 @@
 #'   Graph of variables} \item{fviz_pca_biplot(): Biplot of individuals and 
 #'   variables} \item{fviz_pca(): An alias of fviz_pca_biplot()} }
 #'   
+#'   Note that, \code{fviz_pca_xxx()} functions are wrapper arround the core
+#'   function \code{\link{fviz}()}, whih is also a wrapper arround the
+#'   function \code{\link[ggpubr]{ggscatter}()} [in ggpubr]. Therfore, further arguments, to be
+#'   passed to the function \code{\link{fviz}()} and \code{\link[ggpubr]{ggscatter}()}, can be specified in
+#'   \code{\link{fviz_pca_ind}()} and \code{\link{fviz_pca_var}()}.
+#'   
 #' @param X an object of class PCA [FactoMineR]; prcomp and princomp [stats]; 
 #'   dudi and pca [ade4]; expOutput/epPCA [ExPosition].
 #' @param axes a numeric vector of length 2 specifying the dimensions to be 
 #'   plotted.
 #' @param geom a text specifying the geometry to be used for the graph. Allowed 
-#'   values are the combination of c("point", "arrow", "text"). Use "point" (to 
-#'   show only points); "text" to show only labels; c("point", "text") or 
-#'   c("arrow", "text") to show both types.
+#'   values are the combination of \code{c("point", "arrow", "text")}. Use 
+#'   \code{"point"} (to show only points); \code{"text"} to show only labels; 
+#'   \code{c("point", "text")} or \code{c("arrow", "text")} to show arrows and 
+#'   texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
+#'   variables.
+#' @param geom.ind,geom.var as \code{geom} but for individuals and variables, 
+#'   respectively. Default is geom.ind = c("point", "text), geom.var = 
+#'   c("arrow", "text").
 #' @param label a text specifying the elements to be labelled. Default value is 
 #'   "all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
 #'   "quali", "var", "quanti.sup"). "ind" can be used to label only active 
@@ -40,13 +52,14 @@
 #'   ?PCA in FactoMineR).
 #' @param addEllipses logical value. If TRUE, draws ellipses around the 
 #'   individuals when habillage != "none".
-#' @param col.ind,col.var color for individuals and variables, respectively. 
-#'   Possible values include also : "cos2", "contrib", "coord", "x" or "y". In 
-#'   this case, the colors for individuals/variables are automatically 
-#'   controlled by their qualities of representation ("cos2"), contributions 
-#'   ("contrib"), coordinates (x^2+y^2, "coord"), x values ("x") or y values 
-#'   ("y"). To use automatic coloring (by cos2, contrib, ....), make sure that 
-#'   habillage ="none".
+#' @param col.ind,col.var color for individuals and variables, respectively. Can
+#'   be a continuous variable or a factor variable. Possible values include also
+#'   : "cos2", "contrib", "coord", "x" or "y". In this case, the colors for 
+#'   individuals/variables are automatically controlled by their qualities of 
+#'   representation ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, 
+#'   "coord"), x values ("x") or y values ("y"). To use automatic coloring (by 
+#'   cos2, contrib, ....), make sure that habillage ="none".
+#' @param fill.ind,fill.var same as col.ind and col.var but for the fill color.
 #' @param col.ind.sup color for supplementary individuals
 #' @param alpha.ind,alpha.var controls the transparency of individual and 
 #'   variable colors, respectively. The value can variate from 0 (total 
@@ -68,8 +81,8 @@
 #' @inheritParams ggpubr::ggpar
 #' @inheritParams fviz
 #' @param ... Additional arguments. \itemize{ \item in fviz_pca_ind() and 
-#'   fviz_pca_var(): Additional arguments are passed to the functions 
-#'   fviz() and ggpubr::ggpar(). \item in fviz_pca_biplot() and fviz_pca(): Additional
+#'   fviz_pca_var(): Additional arguments are passed to the functions fviz() and
+#'   ggpubr::ggpar(). \item in fviz_pca_biplot() and fviz_pca(): Additional 
 #'   arguments are passed to fviz_pca_ind() and fviz_pca_var().}
 #'   
 #'   
@@ -156,16 +169,17 @@ fviz_pca <- function(X, ...){
 
 #' @rdname fviz_pca 
 #' @export 
-fviz_pca_ind <- function(X,  axes = c(1,2), geom = c("point", "text"), repel = FALSE,
+fviz_pca_ind <- function(X,  axes = c(1,2), geom = c("point", "text"),
+                         geom.ind = geom, repel = FALSE,
                          habillage="none", palette = NULL, addEllipses=FALSE, 
-                         col.ind = "black", col.ind.sup = "blue", alpha.ind =1,
+                         col.ind = "black", fill.ind = "white", col.ind.sup = "blue", alpha.ind =1,
                          select.ind = list(name = NULL, cos2 = NULL, contrib = NULL),
                          ...)
 {
  
-  fviz (X, element = "ind", axes = axes, geom = geom,
+  fviz (X, element = "ind", axes = axes, geom = geom.ind,
                  habillage = habillage, palette = palette, addEllipses = addEllipses, 
-                 color = col.ind, alpha = alpha.ind, col.row.sup = col.ind.sup,
+                 color = col.ind, fill = fill.ind, alpha = alpha.ind, col.row.sup = col.ind.sup,
                 select = select.ind, repel = repel,  ...)
   
 }
@@ -174,13 +188,14 @@ fviz_pca_ind <- function(X,  axes = c(1,2), geom = c("point", "text"), repel = F
 #' @rdname fviz_pca
 #' @export 
 fviz_pca_var <- function(X, axes=c(1,2), geom = c("arrow", "text"), 
-                         repel = FALSE, col.var="black", alpha.var=1, 
+                         geom.var = geom,
+                         repel = FALSE, col.var="black", fill.var = "white", alpha.var=1, 
                          col.quanti.sup="blue", col.circle ="grey70", 
                          select.var = list(name = NULL, cos2 = NULL, contrib = NULL),
                           ...)
 {
-  fviz (X, element = "var", axes = axes, geom = geom,
-                color = col.var, alpha = alpha.var,  select = select.var,
+  fviz (X, element = "var", axes = axes, geom = geom.var,
+                color = col.var, fill = fill.var, alpha = alpha.var,  select = select.var,
                 repel = repel, col.col.sup = col.quanti.sup, 
                 col.circle = col.circle,...)
   
@@ -191,11 +206,26 @@ fviz_pca_var <- function(X, axes=c(1,2), geom = c("arrow", "text"),
 #' @rdname fviz_pca
 #' @export
 fviz_pca_biplot <- function(X,  axes = c(1,2), geom = c("point", "text"),
-                            col.ind = "black", col.var = "steelblue",
+                            geom.ind = geom, geom.var = c("arrow", "text"),
+                            col.ind = "black", fill.ind = "white", 
+                            col.var = "steelblue", fill.var = "white", gradient.cols = NULL,
                             label = "all", invisible="none", repel = FALSE, 
                             habillage = "none", palette = NULL, addEllipses=FALSE, 
                             title = "PCA - Biplot", ...)
 {
+  
+  # Check if individials or variables are colored by variables
+  is.individuals.colored.by.variable <- .is_grouping_var(fill.ind) | .is_grouping_var(col.ind)
+  is.variables.colored.by.variable <-  .is_continuous_var(col.var) | .is_grouping_var(col.var)
+  # If coloring variable are continuous, then gradient coloring shoulld be applied
+  is.gradient.color <- .is_continuous_var(col.ind) | .is_continuous_var(col.var) 
+  is.gradient.fill <- .is_continuous_var(fill.ind) | .is_continuous_var(fill.var)
+  # If coloring variables are qualitative, then discrete coloring should be applied
+  is.discrete.color <- .is_grouping_var(col.ind) | .is_grouping_var(habillage) | .is_grouping_var(col.var)
+  is.discrete.fill <- .is_grouping_var(fill.ind) | .is_grouping_var(fill.var) |
+                       .is_grouping_var(habillage) | (.is_grouping_var(col.ind) & addEllipses)
+  
+  
   # Data frame to be used for plotting
   var <- facto_summarize(X, element = "var", 
                          result = c("coord", "contrib", "cos2"), axes = axes)
@@ -211,22 +241,41 @@ fviz_pca_biplot <- function(X,  axes = c(1,2), geom = c("point", "text"),
     (max(ind[,"y"])-min(ind[,"y"])/(max(var[,"y"])-min(var[,"y"])))
   )
   
+  # When fill.ind = grouping variable & col.var = continuous variable,
+  # we should inactivate ellipse border and ind.point border colors,
+  # otherwise --> error: Discrete value supplied to continuous scale
+  # Reason: individuals are in discrete color and variable in gradient colors, 
+  # and we can't change the color (https://github.com/kassambara/factoextra/issues/42)
+  ellipse.border.remove  <- FALSE
+  if(is.individuals.colored.by.variable & is.variables.colored.by.variable)
+    ellipse.border.remove <- TRUE
+
+  
+  
   # Individuals
-  p <- fviz_pca_ind(X,  axes = axes, geom = geom, repel = repel,
-                    col.ind = col.ind,
+  p <- fviz_pca_ind(X,  axes = axes, geom = geom.ind, repel = repel,
+                    col.ind = col.ind, fill.ind = fill.ind,
                     label = label, invisible=invisible, habillage = habillage,
-                    addEllipses = addEllipses, palette = palette, ...)
+                    addEllipses = addEllipses, # palette = palette, 
+                    ellipse.border.remove = ellipse.border.remove,
+                    ...)
   # Add variables
-  p <- fviz_pca_var(X, axes = axes, geom =  c("arrow", "text"), repel = repel,
-                    col.var = col.var,
+  p <- fviz_pca_var(X, axes = axes, geom =  geom.var, repel = repel,
+                    col.var = col.var, fill.var = fill.var,
                     label = label, invisible = invisible,
                     scale.= r*0.7, ggp = p,  ...)
+  
+  if(!is.null(gradient.cols)){
+    if(is.gradient.color) p <- p + ggpubr::gradient_color(gradient.cols)
+    if(is.gradient.fill) p <- p + ggpubr::gradient_fill(gradient.cols)
+  }
+  
+  if(!is.null(palette)){
+    if(is.discrete.color) p <- p + ggpubr::color_palette(palette)
+    if(is.discrete.fill) p <- p + ggpubr::fill_palette(palette)
+     
+  }
+  
   p+labs(title=title)
 }
-
-
-
-
-
-
 

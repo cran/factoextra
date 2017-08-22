@@ -2,10 +2,11 @@
 % Please edit documentation in R/fviz_mfa.R
 \name{fviz_mfa}
 \alias{fviz_mfa}
-\alias{fviz_mfa_axes}
 \alias{fviz_mfa_ind}
 \alias{fviz_mfa_quali_biplot}
 \alias{fviz_mfa_var}
+\alias{fviz_mfa_axes}
+\alias{fviz_mfa}
 \title{Visualize Multiple Factor Analysis}
 \usage{
 fviz_mfa_ind(X, axes = c(1, 2), geom = c("point", "text"), repel = FALSE,
@@ -38,9 +39,11 @@ fviz_mfa(X, partial = "all", ...)
 plotted.}
 
 \item{geom}{a text specifying the geometry to be used for the graph. Allowed 
-values are the combination of c("point", "arrow", "text"). Use "point" (to 
-show only points); "text" to show only labels; c("point", "text") or 
-c("arrow", "text") to show both types.}
+values are the combination of \code{c("point", "arrow", "text")}. Use 
+\code{"point"} (to show only points); \code{"text"} to show only labels; 
+\code{c("point", "text")} or \code{c("arrow", "text")} to show arrows and 
+texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
+variables.}
 
 \item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
 labels or not.}
@@ -55,18 +58,20 @@ groups. Allowed values include "grey" for grey color palettes; brewer
 palettes e.g. "RdBu", "Blues", ...; or custom color palette e.g. c("blue",
 "red"); and scientific journal palettes from ggsci R package, e.g.: "npg",
 "aaas", "lancet", "jco", "ucscgb", "uchicago", "simpsons" and
-"rickandmorty".}
+"rickandmorty". Can be also a numeric vector of length(groups); in this
+case a basic color palette is created using the function
+\link[grDevices]{palette}.}
 
 \item{addEllipses}{logical value. If TRUE, draws ellipses around the 
 individuals when habillage != "none".}
 
 \item{col.ind, col.var, col.axes}{color for individuals, variables and col.axes 
-respectively. Possible values include also : "cos2", "contrib", "coord", "x"
-or "y". In this case, the colors for individuals/variables are automatically
-controlled by their qualities ("cos2"), contributions ("contrib"), 
-coordinates (x^2 + y^2 , "coord"), x values("x") or y values("y"). To use 
-automatic coloring (by cos2, contrib, ....), make sure that habillage 
-="none".}
+respectively. Can be a continuous variable or a factor variable. Possible
+values include also : "cos2", "contrib", "coord", "x" or "y". In this case,
+the colors for individuals/variables are automatically controlled by their
+qualities ("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 ,
+"coord"), x values("x") or y values("y"). To use automatic coloring (by
+cos2, contrib, ....), make sure that habillage ="none".}
 
 \item{col.ind.sup}{color for supplementary individuals}
 
@@ -111,7 +116,8 @@ variables and group of variables, respectively.}
 
 \item{col.var.sup}{color for supplementary variables.}
 
-\item{col.circle}{a color for the correlation circle. Used only when X is a PCA output.}
+\item{col.circle}{a color for the correlation circle. Used only when X is a 
+PCA output.}
 }
 \value{
 a ggplot2 plot
@@ -119,8 +125,9 @@ a ggplot2 plot
 \description{
 Multiple factor analysis (MFA) is used to analyze a data set in 
  which individuals are described by several sets of variables (quantitative 
- and/or qualitative) structured into groups. fviz_mfa() provides ggplot2-based
- elegant visualization of MFA outputs from the R function: MFA [FactoMineR].\cr\cr \itemize{ \item{fviz_mfa_ind(): Graph of individuals} 
+ and/or qualitative) structured into groups. fviz_mfa() provides
+ ggplot2-based elegant visualization of MFA outputs from the R function: MFA
+ [FactoMineR].\cr\cr \itemize{ \item{fviz_mfa_ind(): Graph of individuals} 
  \item{fviz_mfa_var(): Graph of variables} \item{fviz_mfa_axes(): Graph of 
  partial axes} \item{fviz_mfa(): An alias of fviz_mfa_ind(res.mfa, partial = 
  "all")} \item{fviz_mfa_quali_biplot(): Biplot of individuals and qualitative
@@ -171,12 +178,11 @@ fviz_mfa_quali_biplot(res.mfa, repel = FALSE, col.var = "#E7B800",
    habillage = grp, addEllipses = TRUE, ellipse.level = 0.95)
 
 }
+\references{
+http://www.sthda.com/english/
+}
 \author{
 Fabian Mundt \email{f.mundt@inventionate.de}
 
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
 }
-\references{
-http://www.sthda.com/english/
-}
-

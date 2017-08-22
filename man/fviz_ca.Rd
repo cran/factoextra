@@ -2,24 +2,25 @@
 % Please edit documentation in R/fviz_ca.R
 \name{fviz_ca}
 \alias{fviz_ca}
-\alias{fviz_ca_biplot}
-\alias{fviz_ca_col}
 \alias{fviz_ca_row}
+\alias{fviz_ca_col}
+\alias{fviz_ca_biplot}
+\alias{fviz_ca}
 \title{Visualize Correspondence Analysis}
 \usage{
-fviz_ca_row(X, axes = c(1, 2), geom = c("point", "text"), shape.row = 19,
-  col.row = "blue", alpha.row = 1, col.row.sup = "darkblue",
-  select.row = list(name = NULL, cos2 = NULL, contrib = NULL),
-  map = "symmetric", repel = FALSE, ...)
+fviz_ca_row(X, axes = c(1, 2), geom = c("point", "text"), geom.row = geom,
+  shape.row = 19, col.row = "blue", alpha.row = 1,
+  col.row.sup = "darkblue", select.row = list(name = NULL, cos2 = NULL,
+  contrib = NULL), map = "symmetric", repel = FALSE, ...)
 
 fviz_ca_col(X, axes = c(1, 2), shape.col = 17, geom = c("point", "text"),
-  col.col = "red", col.col.sup = "darkred", alpha.col = 1,
-  select.col = list(name = NULL, cos2 = NULL, contrib = NULL),
-  map = "symmetric", repel = FALSE, ...)
+  geom.col = geom, col.col = "red", col.col.sup = "darkred",
+  alpha.col = 1, select.col = list(name = NULL, cos2 = NULL, contrib =
+  NULL), map = "symmetric", repel = FALSE, ...)
 
 fviz_ca_biplot(X, axes = c(1, 2), geom = c("point", "text"),
-  label = "all", invisible = "none", arrows = c(FALSE, FALSE),
-  repel = FALSE, title = "CA - Biplot", ...)
+  geom.row = geom, geom.col = geom, label = "all", invisible = "none",
+  arrows = c(FALSE, FALSE), repel = FALSE, title = "CA - Biplot", ...)
 
 fviz_ca(X, ...)
 }
@@ -35,6 +36,10 @@ Allowed values are the combination of c("point", "arrow", "text"). Use
 "point" (to show only points); "text" to show only labels; c("point", 
 "text") or c("arrow", "text") to show both types.}
 
+\item{geom.row, geom.col}{as \code{geom} but for row and column elements,
+respectively. Default is geom.row = c("point", "text), geom.col =
+c("point", "text").}
+
 \item{shape.row, shape.col}{the point shapes to be used for row/column 
 variables. Default values are 19 for rows and 17 for columns.}
 
@@ -46,16 +51,16 @@ variables. Default values are 19 for rows and 17 for columns.}
 labels or not.}
 
 \item{...}{Additional arguments. \itemize{ \item in fviz_ca_row() and 
-fviz_ca_col(): Additional arguments are passed to the functions 
-fviz() and ggpubr::ggpar(). \item in fviz_ca_biplot() and fviz_ca(): Additional
+fviz_ca_col(): Additional arguments are passed to the functions fviz() and
+ggpubr::ggpar(). \item in fviz_ca_biplot() and fviz_ca(): Additional 
 arguments are passed to fviz_ca_row() and fviz_ca_col().}}
 
 \item{col.col, col.row}{color for column/row points. The default values are 
-"red" and "blue", respectively. Allowed values include also : "cos2", 
-"contrib", "coord", "x" or "y". In this case, the colors for row/column 
-variables are automatically controlled by their qualities ("cos2"), 
-contributions ("contrib"), coordinates (x^2 + y^2, "coord"), x values("x") 
-or y values("y")}
+"red" and "blue", respectively. Can be a continuous variable or a factor
+variable. Allowed values include also : "cos2", "contrib", "coord", "x" or
+"y". In this case, the colors for row/column variables are automatically
+controlled by their qualities ("cos2"), contributions ("contrib"),
+coordinates (x^2 + y^2, "coord"), x values("x") or y values("y")}
 
 \item{col.col.sup, col.row.sup}{colors for the supplementary column and row 
 points, respectively.}
@@ -95,37 +100,37 @@ a ggplot
 Correspondence analysis (CA) is an extension of Principal 
  Component Analysis (PCA) suited to analyze frequencies formed by two 
  categorical variables. fviz_ca() provides ggplot2-based elegant 
- visualization of CA outputs from the R functions: CA [in FactoMineR], ca
- [in ca], coa [in ade4], correspondence [in MASS] and expOutput/epCA [in ExPosition]. Read more: 
+ visualization of CA outputs from the R functions: CA [in FactoMineR], ca [in
+ ca], coa [in ade4], correspondence [in MASS] and expOutput/epCA [in
+ ExPosition]. Read more: 
  \href{http://www.sthda.com/english/wiki/correspondence-analysis-in-r-the-ultimate-guide-for-the-analysis-the-visualization-and-the-interpretation-r-software-and-data-mining}{Correspondence
- Analysis} 
-    
- \itemize{ \item{fviz_ca_row(): Graph of row variables}
- \item{fviz_ca_col(): Graph of column variables} \item{fviz_ca_biplot():
- Biplot of row and column variables} \item{fviz_ca(): An alias of
- fviz_ca_biplot()} }
+  Analysis}
+ 
+ \itemize{ \item{fviz_ca_row(): Graph of row variables} \item{fviz_ca_col():
+ Graph of column variables} \item{fviz_ca_biplot(): Biplot of row and column
+ variables} \item{fviz_ca(): An alias of fviz_ca_biplot()} }
 }
 \details{
-The default plot of (M)CA is a "symmetric" plot in which both rows and 
- columns are in principal coordinates. In this situation, it's not possible 
- to interpret the distance between row points and column points. To overcome 
- this problem, the simplest way is to make an asymmetric plot. This means 
- that, the column profiles must be presented in row space or vice-versa. The 
- allowed options for the argument map are: \itemize{ \item "rowprincipal" or 
- "colprincipal": asymmetric plots with either rows in principal coordinates 
- and columns in standard coordinates, or vice versa. These plots preserve row
- metric or column metric respectively. \item "symbiplot": Both rows and 
- columns are scaled to have variances equal to the singular values (square 
- roots of eigenvalues), which gives a symmetric biplot but does not preserve 
- row or column metrics. \item "rowgab" or "colgab": Asymmetric maps, proposed
- by Gabriel & Odoroff (1990), with rows (respectively, columns) in principal 
- coordinates and columns (respectively, rows) in standard coordinates 
- multiplied by the mass of the corresponding point. \item "rowgreen" or 
- "colgreen": The so-called contribution biplots showing visually the most 
- contributing points (Greenacre 2006b). These are similar to "rowgab" and 
- "colgab" except that the points in standard coordinates are multiplied by 
- the square root of the corresponding masses, giving reconstructions of the 
- standardized residuals. }
+The default plot of (M)CA is a "symmetric" plot in which both rows
+ and columns are in principal coordinates. In this situation, it's not
+ possible to interpret the distance between row points and column points. To
+ overcome this problem, the simplest way is to make an asymmetric plot. This
+ means that, the column profiles must be presented in row space or
+ vice-versa. The allowed options for the argument map are: \itemize{ \item
+ "rowprincipal" or "colprincipal": asymmetric plots with either rows in
+ principal coordinates and columns in standard coordinates, or vice versa.
+ These plots preserve row metric or column metric respectively. \item
+ "symbiplot": Both rows and columns are scaled to have variances equal to the
+ singular values (square roots of eigenvalues), which gives a symmetric
+ biplot but does not preserve row or column metrics. \item "rowgab" or
+ "colgab": Asymmetric maps, proposed by Gabriel & Odoroff (1990), with rows
+ (respectively, columns) in principal coordinates and columns (respectively,
+ rows) in standard coordinates multiplied by the mass of the corresponding
+ point. \item "rowgreen" or "colgreen": The so-called contribution biplots
+ showing visually the most contributing points (Greenacre 2006b). These are
+ similar to "rowgab" and "colgab" except that the points in standard
+ coordinates are multiplied by the square root of the corresponding masses,
+ giving reconstructions of the standardized residuals. }
 }
 \examples{
 # Correspondence Analysis
@@ -203,13 +208,12 @@ fviz_ca_col(res.ca, select.col = list(contrib = 3))
     
  
 }
-\author{
-Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
-}
 \references{
 http://www.sthda.com
 }
 \seealso{
 \code{\link{get_ca}}, \code{\link{fviz_pca}}, \code{\link{fviz_mca}}
 }
-
+\author{
+Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
+}
