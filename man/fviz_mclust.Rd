@@ -6,26 +6,27 @@
 \title{Plot Model-Based Clustering Results using ggplot2}
 \usage{
 fviz_mclust(object, what = c("classification", "uncertainty", "BIC"),
-  ellipse.type = "norm", ellipse.level = 0.4, ggtheme = theme_classic(),
-  ...)
+  ellipse.type = "norm", ellipse.level = 0.4,
+  ggtheme = theme_classic(), ...)
 
-fviz_mclust_bic(object, model.names = NULL, shape = 19, color = "model",
-  palette = NULL, legend = NULL, main = "Model selection",
-  xlab = "Number of components", ylab = "BIC", ...)
+fviz_mclust_bic(object, model.names = NULL, shape = 19,
+  color = "model", palette = NULL, legend = NULL,
+  main = "Model selection", xlab = "Number of components",
+  ylab = "BIC", ...)
 }
 \arguments{
 \item{object}{an object of class Mclust}
 
 \item{what}{choose from one of the following three options: "classification" (default), "uncertainty" and "BIC".}
 
-\item{ellipse.type}{Character specifying frame type. Possible 
-values are 'convex', 'confidence' or types supported by 
-\code{\link[ggplot2]{stat_ellipse}} including one of c("t", "norm", 
+\item{ellipse.type}{Character specifying frame type. Possible values are
+'convex', 'confidence' or types supported by
+\code{\link[ggplot2]{stat_ellipse}} including one of c("t", "norm",
 "euclid").}
 
-\item{ellipse.level}{the size of the concentration ellipse in 
-normal probability. Passed for \code{ggplot2::stat_ellipse} 's level. 
-Ignored in 'convex'. Default value is 0.95.}
+\item{ellipse.level}{the size of the concentration ellipse in normal
+probability. Passed for \code{ggplot2::stat_ellipse} 's level. Ignored in
+'convex'. Default value is 0.95.}
 
 \item{ggtheme}{function, ggplot2 theme name. Default value is theme_pubr().
 Allowed values include ggplot2 official themes: theme_gray(), theme_bw(),
