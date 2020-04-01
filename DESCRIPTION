@@ -1,8 +1,8 @@
 Package: factoextra
 Type: Package
 Title: Extract and Visualize the Results of Multivariate Data Analyses
-Version: 1.0.6
-Date: 2019-12-04
+Version: 1.0.7
+Date: 2020-04-01
 Authors@R: c(
     person("Alboukadel", "Kassambara", role = c("aut", "cre"), email = "alboukadel.kassambara@gmail.com"),
     person("Fabian", "Mundt", role = c("aut"), email = "f.mundt@inventionate.de")
@@ -33,11 +33,11 @@ Collate: 'cluster_utilities.R' 'decathlon2.R' 'print.factoextra.R'
         'fviz_pca.R' 'fviz_silhouette.R' 'get_ca.R'
         'get_clust_tendency.R' 'get_famd.R' 'hkmeans.R' 'housetasks.R'
         'multishapes.R' 'poison.R' 'zzz.R'
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 NeedsCompilation: no
-Packaged: 2019-12-04 22:58:53 UTC; kassambara
+Packaged: 2020-04-01 20:17:41 UTC; kassambara
 Author: Alboukadel Kassambara [aut, cre],
   Fabian Mundt [aut]
 Maintainer: Alboukadel Kassambara <alboukadel.kassambara@gmail.com>
 Repository: CRAN
-Date/Publication: 2019-12-05 07:50:02 UTC
+Date/Publication: 2020-04-01 21:20:02 UTC

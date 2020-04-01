@@ -5,14 +5,26 @@
 \alias{fviz_gap_stat}
 \title{Dertermining and Visualizing the Optimal Number of Clusters}
 \usage{
-fviz_nbclust(x, FUNcluster = NULL, method = c("silhouette", "wss",
-  "gap_stat"), diss = NULL, k.max = 10, nboot = 100,
-  verbose = interactive(), barfill = "steelblue",
-  barcolor = "steelblue", linecolor = "steelblue",
-  print.summary = TRUE, ...)
+fviz_nbclust(
+  x,
+  FUNcluster = NULL,
+  method = c("silhouette", "wss", "gap_stat"),
+  diss = NULL,
+  k.max = 10,
+  nboot = 100,
+  verbose = interactive(),
+  barfill = "steelblue",
+  barcolor = "steelblue",
+  linecolor = "steelblue",
+  print.summary = TRUE,
+  ...
+)
 
-fviz_gap_stat(gap_stat, linecolor = "steelblue", maxSE = list(method =
-  "firstSEmax", SE.factor = 1))
+fviz_gap_stat(
+  gap_stat,
+  linecolor = "steelblue",
+  maxSE = list(method = "firstSEmax", SE.factor = 1)
+)
 }
 \arguments{
 \item{x}{numeric matrix or data frame. In the function fviz_nbclust(), x can 
@@ -24,7 +36,7 @@ clusters desired, and returns a list with a component named cluster which
 contains the grouping of observations. Allowed values include: kmeans,
 cluster::pam, cluster::clara, cluster::fanny, hcut, etc. This argument is
 not required when x is an output of the function 
-\code{\link[NbClust]{NbClust}}().}
+\code{NbClust::NbClust()}.}
 
 \item{method}{the method to be used for estimating the optimal number of 
 clusters. Possible values are "silhouette" (for average silhouette width), 

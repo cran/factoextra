@@ -1,3 +1,10 @@
+# factoextra 1.0.7
+
+## Minor changes
+
+- Adding stringsAsFactors = TRUE to the relevant calls to data.frame to anticipate compatibility with future R 4.0.0
+
+
 # factoextra 1.0.6
 
 ## Minor changes
