@@ -19,11 +19,12 @@ NULL
 #'   Allowed values are "none" (no sorting), "asc" (for ascending) or "desc"
 #'   (for descending).
 #' @param top a numeric value specifying the number of top elements to be shown.
+#' @param xtickslab.rt rotation angle for x axis tick labels. Default is 45 degrees.
 #' @inheritParams ggpubr::ggpar
 #'   
 #' @return a ggplot
 #' @author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
-#' @references http://www.sthda.com/english/
+#' @references \url{https://www.sthda.com/english/}
 #' @examples
 #' \donttest{
 #' # Principal component analysis

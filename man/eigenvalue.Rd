@@ -26,6 +26,11 @@ fviz_eig(
   xlab = NULL,
   ylab = NULL,
   ggtheme = theme_minimal(),
+  parallel = FALSE,
+  parallel.color = "red",
+  parallel.lty = "dashed",
+  parallel.iter = 100,
+  parallel.seed = NULL,
   ...
 )
 
@@ -51,7 +56,7 @@ both types.}
 
 \item{ncp}{a numeric value specifying the number of dimensions to be shown.}
 
-\item{addlabels}{logical value. If TRUE, labels are added at the top of bars 
+\item{addlabels}{logical value. If TRUE, labels are added at the top of bars
 or points showing the information retained by each dimension.}
 
 \item{hjust}{horizontal adjustment of the labels.}
@@ -62,22 +67,36 @@ or points showing the information retained by each dimension.}
 Allowed values include ggplot2 official themes: theme_gray(), theme_bw(),
 theme_minimal(), theme_classic(), theme_void(), ....}
 
+\item{parallel}{logical value. If TRUE, adds a parallel analysis threshold line
+(Horn's method) to help determine the number of components to retain. Components
+with eigenvalues above this line are considered significant. Only works when
+choice = "eigenvalue" and X is a prcomp or princomp object. Default is FALSE.}
+
+\item{parallel.color}{color of the parallel analysis threshold line. Default is "red".}
+
+\item{parallel.lty}{line type for the parallel analysis line. Default is "dashed".}
+
+\item{parallel.iter}{number of iterations for parallel analysis simulation. Default is 100.}
+
+\item{parallel.seed}{integer seed for reproducible parallel analysis simulation.
+If NULL (default), the current RNG stream is used.}
+
 \item{...}{optional arguments to be passed to the function \link[ggpubr]{ggpar}.}
 }
 \value{
-\itemize{ \item{get_eig() (or get_eigenvalue()): returns a data.frame 
- containing 3 columns: the eigenvalues, the percentage of variance and  the 
- cumulative percentage of variance retained by each dimension.} 
- \item{fviz_eig() (or fviz_screeplot()): returns a ggplot2} }
+\itemize{ \item get_eig() (or get_eigenvalue()): returns a data.frame
+ containing 3 columns: the eigenvalues, the percentage of variance and  the
+ cumulative percentage of variance retained by each dimension.
+ \item fviz_eig() (or fviz_screeplot()): returns a ggplot2 }
 }
 \description{
 Eigenvalues correspond to the amount of the variation explained 
  by each principal component (PC). 
  
- \itemize{ \item{get_eig(): Extract the eigenvalues/variances of the 
- principal dimensions} \item{fviz_eig(): Plot the eigenvalues/variances 
- against the number of dimensions} \item{get_eigenvalue(): an alias of 
- get_eig()} \item{fviz_screeplot(): an alias of fviz_eig()} }
+ \itemize{ \item get_eig(): Extract the eigenvalues/variances of the
+ principal dimensions \item fviz_eig(): Plot the eigenvalues/variances
+ against the number of dimensions \item get_eigenvalue(): an alias of
+ get_eig() \item fviz_screeplot(): an alias of fviz_eig() }
  
  These functions support the results of Principal Component Analysis (PCA), 
  Correspondence Analysis (CA), Multiple Correspondence Analysis (MCA), Factor Analysis of Mixed Data (FAMD),
@@ -101,7 +120,12 @@ fviz_eig(res.pca, choice = "eigenvalue", addlabels=TRUE)
 
 # Use only bar  or line plot: geom = "bar" or geom = "line"
 fviz_eig(res.pca, geom="line")
- 
+
+# Parallel analysis (Horn's method) to determine number of components
+# Components with eigenvalues above the red line are significant
+fviz_eig(res.pca, choice = "eigenvalue", parallel = TRUE,
+         addlabels = TRUE, parallel.color = "red", parallel.seed = 123)
+
 \dontrun{         
 # Correspondence Analysis
 # +++++++++++++++++++++++++++++++++
@@ -125,7 +149,7 @@ fviz_eig(res.mca, linecolor = "#FC4E07",
 
 }
 \references{
-http://www.sthda.com/english/
+\url{https://www.sthda.com/english/}
 }
 \seealso{
 \code{\link{fviz_pca}}, \code{\link{fviz_ca}},

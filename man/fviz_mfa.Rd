@@ -79,8 +79,9 @@ values are the combination of \code{c("point", "arrow", "text")}. Use
 texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
 variables.}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
-labels or not.}
+\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
+labels or not. The old \code{jitter} argument is kept for backward
+compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{habillage}{an optional factor variable for coloring the observations by 
 groups. Default value is "none". If X is an MFA object from FactoMineR 
@@ -133,9 +134,9 @@ are drawn. if cos2 > 1, ex: 5, then the top 5 individuals/variables with the
 highest cos2 are drawn. \item contrib if contrib > 1, ex: 5,  then the top 5
 individuals/variables with the highest cos2 are drawn }}
 
-\item{partial}{list of the individuals for which the partial points should be 
-drawn. (by default, partial = NULL and no partial points are drawn). Use 
-partial = "All" to visualize partial points for all individuals.}
+\item{partial}{list of the individuals for which the partial points should be
+drawn. (by default, partial = NULL and no partial points are drawn). Use
+partial = "all" to visualize partial points for all individuals.}
 
 \item{col.partial}{color for partial individuals. By default, points are 
 colored according to the groups.}
@@ -161,11 +162,11 @@ Multiple factor analysis (MFA) is used to analyze a data set in
  which individuals are described by several sets of variables (quantitative 
  and/or qualitative) structured into groups. fviz_mfa() provides
  ggplot2-based elegant visualization of MFA outputs from the R function: MFA
- [FactoMineR].\cr\cr \itemize{ \item{fviz_mfa_ind(): Graph of individuals} 
- \item{fviz_mfa_var(): Graph of variables} \item{fviz_mfa_axes(): Graph of 
- partial axes} \item{fviz_mfa(): An alias of fviz_mfa_ind(res.mfa, partial = 
- "all")} \item{fviz_mfa_quali_biplot(): Biplot of individuals and qualitative
- variables} }
+ [FactoMineR].\cr\cr \itemize{ \item fviz_mfa_ind(): Graph of individuals
+ \item fviz_mfa_var(): Graph of variables \item fviz_mfa_axes(): Graph of
+ partial axes \item fviz_mfa(): An alias of fviz_mfa_ind(res.mfa, partial =
+ "all") \item fviz_mfa_quali_biplot(): Biplot of individuals and qualitative
+ variables }
 }
 \examples{
 # Compute Multiple Factor Analysis
@@ -213,7 +214,7 @@ fviz_mfa_quali_biplot(res.mfa, repel = FALSE, col.var = "#E7B800",
 
 }
 \references{
-http://www.sthda.com/english/
+\url{https://www.sthda.com/english/}
 }
 \author{
 Fabian Mundt \email{f.mundt@inventionate.de}

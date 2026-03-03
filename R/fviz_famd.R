@@ -6,9 +6,9 @@ NULL
 #'   MFA, used to analyze a data set containing both quantitative and
 #'   qualitative variables. fviz_famd() provides ggplot2-based elegant
 #'   visualization of FAMD outputs from the R function: FAMD [FactoMineR].\cr\cr
-#'   \itemize{ \item{fviz_famd_ind(): Graph of individuals}
-#'   \item{fviz_famd_var(): Graph of variables} \item{fviz_famd(): An alias of
-#'   fviz_famd_ind(res.famd)} }
+#'   \itemize{ \item fviz_famd_ind(): Graph of individuals
+#'   \item fviz_famd_var(): Graph of variables \item fviz_famd(): An alias of
+#'   fviz_famd_ind(res.famd) }
 #'   
 #' @param X an object of class FAMD [FactoMineR].
 #' @inheritParams fviz_mca
@@ -50,8 +50,9 @@ NULL
 #'   contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with 
 #'   the highest cos2 are drawn }
 #' @param ... Arguments to be passed to the function fviz()
-#' @param repel a boolean, whether to use ggrepel to avoid overplotting text 
-#'   labels or not.
+#' @param repel a boolean, whether to use ggrepel to avoid overplotting text
+#'   labels or not. The old \code{jitter} argument is kept for backward
+#'   compatibility and is converted to \code{repel = TRUE} with a deprecation warning.
 #' @return a ggplot
 #' @author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
 #' @examples

@@ -1,3 +1,65 @@
+# factoextra 2.0.0
+
+Major modernization release after 6 years. Resolves 30+ open issues and aligns
+with the current R/ggplot2/FactoMineR ecosystem.
+
+## Breaking Changes
+
+* **R >= 4.1.0** required (was >= 3.1.2).
+* **ggplot2 >= 3.5.2** required (previously no minimum).
+* **FactoMineR >= 2.13** required.
+* `get_clust_tendency()`: Hopkins statistic now uses the corrected Wright (2022)
+  formula — values will differ from earlier versions. Default `seed` changed
+  from `123` to `NULL`.
+* **tidyr and reshape2 no longer needed** — replaced with base R internally.
+
+## ggplot2 Compatibility Fixes
+
+* Replaced all `aes_string()` with `aes()` + `.data` pronoun (rlang).
+  (#188, #190, #191, #192)
+* Replaced `guides(... = FALSE)` with `guides(... = "none")`.
+  (#141, #156, #174, #179, #183)
+* Replaced `size` with `linewidth` for line-based geoms. (#178, #191)
+
+## Bug Fixes
+
+* `fviz_dend()`: fixed `rect_border` error and "condition has length > 1" crash.
+  (#151, #163, #180)
+* `fviz_nbclust()`: fixed class-comparison crash, cluster ordering for k > 9,
+  and silhouette error when k >= n. (#113, #131, #147, #148, #149, #171)
+* `facto_summarize()`: axes parameter now correctly selects requested dimensions.
+  (#120, #143, #166, #167)
+* `fviz_ca_col()`: fixed `col.col.sup` parameter name typo. (#150)
+* `fviz_pca_biplot()`: fixed rescaling. (#129)
+* `get_clust_tendency()`: fixed biased Hopkins sampling. (#133)
+* `.onAttach()`: startup message no longer falsely claims ggpubr/FactoMineR
+  are "loaded" (they are imported, not attached).
+* `.add_ind_groups()`: no longer crashes with single-column habillage data frame.
+
+## New Features
+
+* `fviz_eig()`: parallel analysis support (Horn 1965).
+* `fviz_pca_biplot()`: scaling types (Gabriel 1971).
+* `get_clust_tendency()`: stricter input validation, RNG state preservation,
+  `options(factoextra.warn_hopkins = FALSE)` to suppress one-time warning.
+* `hcut()` and `hkmeans()`: improved input checks and error handling.
+  Redundant `k >= n` checks removed to preserve backward-compatible error
+  messages from `cutree()` / `kmeans()` (avoids breaking reverse dependencies
+  such as `chooseGCM`). ([@erdeyl, #199](https://github.com/kassambara/factoextra/pull/199))
+* Expanded `testthat` test suite (113 tests).
+  ([@erdeyl, #199](https://github.com/kassambara/factoextra/pull/199))
+* GitHub Actions R-CMD-check workflow.
+
+## Internal
+
+* CA/MCA/PCA extractor internals refactored to vectorized, type-stable code.
+* `factominer_category_map()` and `map_factominer_legacy_names()` helpers
+  for FactoMineR category-name compatibility.
+* `clean_lock_files()` helper for removing stale `00LOCK-*` directories.
+* Added `LazyDataCompression: xz` for CRAN compliance.
+* Laszlo Erdey added as contributor.
+
+
 # factoextra 1.0.7
 
 ## Minor changes

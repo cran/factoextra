@@ -53,8 +53,9 @@ values are the combination of \code{c("point", "arrow", "text")}. Use
 texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
 variables.}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
-labels or not.}
+\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
+labels or not. The old \code{jitter} argument is kept for backward
+compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{habillage}{an optional factor variable for coloring the observations by
 groups. Default value is "none". If X is an MFA object from FactoMineR 
@@ -125,9 +126,9 @@ Factor analysis of mixed data (FAMD) is, a particular case of
   MFA, used to analyze a data set containing both quantitative and
   qualitative variables. fviz_famd() provides ggplot2-based elegant
   visualization of FAMD outputs from the R function: FAMD [FactoMineR].\cr\cr
-  \itemize{ \item{fviz_famd_ind(): Graph of individuals}
-  \item{fviz_famd_var(): Graph of variables} \item{fviz_famd(): An alias of
-  fviz_famd_ind(res.famd)} }
+  \itemize{ \item fviz_famd_ind(): Graph of individuals
+  \item fviz_famd_var(): Graph of variables \item fviz_famd(): An alias of
+  fviz_famd_ind(res.famd) }
 }
 \examples{
 # Compute FAMD

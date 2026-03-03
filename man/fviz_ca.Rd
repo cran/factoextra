@@ -76,8 +76,9 @@ variables. Default values are 19 for rows and 17 for columns.}
 "symmetric", "rowprincipal", "colprincipal", "symbiplot", "rowgab", 
 "colgab", "rowgreen" and "colgreen". See details}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
-labels or not.}
+\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
+labels or not. The old \code{jitter} argument is kept for backward
+compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{...}{Additional arguments. \itemize{ \item in fviz_ca_row() and 
 fviz_ca_col(): Additional arguments are passed to the functions fviz() and
@@ -132,12 +133,12 @@ Correspondence analysis (CA) is an extension of Principal
  visualization of CA outputs from the R functions: CA [in FactoMineR], ca [in
  ca], coa [in ade4], correspondence [in MASS] and expOutput/epCA [in
  ExPosition]. Read more: 
- \href{http://www.sthda.com/english/wiki/correspondence-analysis-in-r-the-ultimate-guide-for-the-analysis-the-visualization-and-the-interpretation-r-software-and-data-mining}{Correspondence
+ \href{https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/113-ca-correspondence-analysis-in-r-essentials/}{Correspondence
   Analysis}
  
- \itemize{ \item{fviz_ca_row(): Graph of row variables} \item{fviz_ca_col():
- Graph of column variables} \item{fviz_ca_biplot(): Biplot of row and column
- variables} \item{fviz_ca(): An alias of fviz_ca_biplot()} }
+ \itemize{ \item fviz_ca_row(): Graph of row variables \item fviz_ca_col():
+ Graph of column variables \item fviz_ca_biplot(): Biplot of row and column
+ variables \item fviz_ca(): An alias of fviz_ca_biplot() }
 }
 \details{
 The default plot of (M)CA is a "symmetric" plot in which both rows
@@ -238,7 +239,7 @@ fviz_ca_col(res.ca, select.col = list(contrib = 3))
  
 }
 \references{
-http://www.sthda.com
+\url{https://www.sthda.com/english/}
 }
 \seealso{
 \code{\link{get_ca}}, \code{\link{fviz_pca}}, \code{\link{fviz_mca}}

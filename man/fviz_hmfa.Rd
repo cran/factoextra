@@ -65,8 +65,9 @@ values are the combination of \code{c("point", "arrow", "text")}. Use
 texts. Using \code{c("arrow", "text")} is sensible only for the graph of 
 variables.}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
-labels or not.}
+\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
+labels or not. The old \code{jitter} argument is kept for backward
+compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{habillage}{an optional factor variable for coloring the observations by 
 groups. Default value is "none". If X is an HMFA object from FactoMineR 
@@ -107,9 +108,9 @@ then the top 5 individuals/variables with the highest cos2 are drawn. \item
 contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with 
 the highest cos2 are drawn }}
 
-\item{partial}{list of the individuals for which the partial points should be 
-drawn. (by default, partial = NULL and no partial points are drawn). Use 
-partial = "All" to visualize partial points for all individuals.}
+\item{partial}{list of the individuals for which the partial points should be
+drawn. (by default, partial = NULL and no partial points are drawn). Use
+partial = "all" to visualize partial points for all individuals.}
 
 \item{col.partial}{color for partial individuals. By default, points are 
 colored according to the groups.}
@@ -137,9 +138,9 @@ Hierarchical Multiple Factor Analysis (HMFA) is, an extension of
  MFA, used in a situation where the data are organized into a hierarchical
  structure.  fviz_hmfa() provides ggplot2-based elegant visualization of HMFA
  outputs from the R function: HMFA [FactoMineR].\cr\cr \itemize{
- \item{fviz_hmfa_ind(): Graph of individuals} \item{fviz_hmfa_var(): Graph of
- variables} \item{fviz_hmfa_quali_biplot(): Biplot of individuals and
- qualitative variables} \item{fviz_hmfa(): An alias of fviz_hmfa_ind()} }
+ \item fviz_hmfa_ind(): Graph of individuals \item fviz_hmfa_var(): Graph of
+ variables \item fviz_hmfa_quali_biplot(): Biplot of individuals and
+ qualitative variables \item fviz_hmfa(): An alias of fviz_hmfa_ind() }
 }
 \examples{
 # Hierarchical Multiple Factor Analysis
@@ -187,7 +188,7 @@ fviz_hmfa_ind(res.hmfa, partial = "all", palette = "Dark2")
 
 }
 \references{
-http://www.sthda.com/english/
+\url{https://www.sthda.com/english/}
 }
 \author{
 Fabian Mundt \email{f.mundt@inventionate.de}

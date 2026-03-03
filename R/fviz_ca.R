@@ -8,12 +8,12 @@ NULL
 #'  visualization of CA outputs from the R functions: CA [in FactoMineR], ca [in
 #'  ca], coa [in ade4], correspondence [in MASS] and expOutput/epCA [in
 #'  ExPosition]. Read more: 
-#'  \href{http://www.sthda.com/english/wiki/correspondence-analysis-in-r-the-ultimate-guide-for-the-analysis-the-visualization-and-the-interpretation-r-software-and-data-mining}{Correspondence
+#'  \href{https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/113-ca-correspondence-analysis-in-r-essentials/}{Correspondence
 #'   Analysis}
 #'  
-#'  \itemize{ \item{fviz_ca_row(): Graph of row variables} \item{fviz_ca_col():
-#'  Graph of column variables} \item{fviz_ca_biplot(): Biplot of row and column
-#'  variables} \item{fviz_ca(): An alias of fviz_ca_biplot()} }
+#'  \itemize{ \item fviz_ca_row(): Graph of row variables \item fviz_ca_col():
+#'  Graph of column variables \item fviz_ca_biplot(): Biplot of row and column
+#'  variables \item fviz_ca(): An alias of fviz_ca_biplot() }
 #'  
 #'@param X an object of class CA [FactoMineR], ca [ca], coa [ade4]; 
 #'  correspondence [MASS] and expOutput/epCA [ExPosition].
@@ -48,8 +48,9 @@ NULL
 #'  for the arguments col.col and col.row.
 #'@param col.col.sup,col.row.sup colors for the supplementary column and row 
 #'  points, respectively.
-#'@param repel a boolean, whether to use ggrepel to avoid overplotting text 
-#'  labels or not.
+#'@param repel a boolean, whether to use ggrepel to avoid overplotting text
+#'  labels or not. The old \code{jitter} argument is kept for backward
+#'  compatibility and is converted to \code{repel = TRUE} with a deprecation warning.
 #'@param select.col,select.row a selection of columns/rows to be drawn. Allowed 
 #'  values are NULL or a list containing the arguments name, cos2 or contrib: 
 #'  \itemize{ \item name is a character vector containing column/row names to be
@@ -90,7 +91,7 @@ NULL
 #'@return a ggplot
 #'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
 #'@seealso \code{\link{get_ca}}, \code{\link{fviz_pca}}, \code{\link{fviz_mca}}
-#'@references http://www.sthda.com
+#'@references \url{https://www.sthda.com/english/}
 #' @examples
 #' # Correspondence Analysis
 #' # ++++++++++++++++++++++++++++++
@@ -201,7 +202,7 @@ fviz_ca_col <-function(X,  axes = c(1,2), shape.col = 17,
         color = col.col, alpha = alpha.col,
         pointshape = shape.col, select = select.col, 
         map = map, repel = repel, 
-        colcol.sup = col.col.sup, shape.sup = shape.col, ...)
+        col.col.sup = col.col.sup, shape.sup = shape.col, ...)
   
   
 }

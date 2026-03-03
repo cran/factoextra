@@ -6,9 +6,9 @@ NULL
 #'  MFA, used in a situation where the data are organized into a hierarchical
 #'  structure.  fviz_hmfa() provides ggplot2-based elegant visualization of HMFA
 #'  outputs from the R function: HMFA [FactoMineR].\cr\cr \itemize{
-#'  \item{fviz_hmfa_ind(): Graph of individuals} \item{fviz_hmfa_var(): Graph of
-#'  variables} \item{fviz_hmfa_quali_biplot(): Biplot of individuals and
-#'  qualitative variables} \item{fviz_hmfa(): An alias of fviz_hmfa_ind()} }
+#'  \item fviz_hmfa_ind(): Graph of individuals \item fviz_hmfa_var(): Graph of
+#'  variables \item fviz_hmfa_quali_biplot(): Biplot of individuals and
+#'  qualitative variables \item fviz_hmfa(): An alias of fviz_hmfa_ind() }
 #'@param X an object of class HMFA [FactoMineR].
 #'@inheritParams fviz_mca
 #'@inheritParams fviz_pca
@@ -52,16 +52,17 @@ NULL
 #'  "quali.var", "group") for plotting quantitative variables, qualitative 
 #'  variables and group of variables, respectively.
 #'@param ... Arguments to be passed to the function fviz() and ggpubr::ggpar()
-#'@param partial list of the individuals for which the partial points should be 
-#'  drawn. (by default, partial = NULL and no partial points are drawn). Use 
-#'  partial = "All" to visualize partial points for all individuals.
+#'@param partial list of the individuals for which the partial points should be
+#'  drawn. (by default, partial = NULL and no partial points are drawn). Use
+#'  partial = "all" to visualize partial points for all individuals.
 #'@param col.var.sup color for supplementary variables.
-#'@param repel a boolean, whether to use ggrepel to avoid overplotting text 
-#'  labels or not.
+#'@param repel a boolean, whether to use ggrepel to avoid overplotting text
+#'  labels or not. The old \code{jitter} argument is kept for backward
+#'  compatibility and is converted to \code{repel = TRUE} with a deprecation warning.
 #'@return a ggplot
 #'@author Fabian Mundt \email{f.mundt@inventionate.de}
 #'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
-#'@references http://www.sthda.com/english/
+#'@references \url{https://www.sthda.com/english/}
 #' @examples
 #' # Hierarchical Multiple Factor Analysis
 #' # ++++++++++++++++++++++++
@@ -156,16 +157,17 @@ fviz_hmfa_ind <- function(X,  axes = c(1,2), geom=c("point", "text"), repel = FA
     # elements to be hidden
     hide <- .hide(invisible)
     # Plot
-    if(!hide$ind & "point" %in% geom) {
+    if(!hide$ind && "point" %in% geom) {
       # Partial point
       p <- p + ggpubr::geom_exec(geom_point, data = ind.partial,
                                  x = "x.partial", y = "y.partial", 
                                  colour = col.partial,
                                  shape = shape.ind, size = 1)
       # Partial segments
+      # FIX: ggplot2 3.4.0+ deprecation - size replaced with linewidth for geom_segment
       p <- p + ggpubr::geom_exec(geom_segment, data = ind.partial,
                                  x = "x", y = "y", xend = 'x.partial', yend = 'y.partial',
-                                 linetype = "group.name", colour = col.partial, size = 0.5)
+                                 linetype = "group.name", colour = col.partial, linewidth = 0.5)
     }
     # Edit plot title and legend title
     p <- p  + labs(colour = "Groups", linetype = "Groups")
@@ -217,4 +219,3 @@ fviz_hmfa <- function(X, ...){
   # fviz_hmfa_ind_starplot(X, ...)
   fviz_hmfa_ind(X, ...)
 }
-

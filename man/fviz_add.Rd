@@ -42,8 +42,9 @@ Allowed values are "point" or "arrow" or "text"}
 
 \item{linetype}{the linetype to be used when geom ="arrow"}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text 
-labels or not.}
+\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
+labels or not. The old \code{jitter} argument is kept for backward
+compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{font.family}{character vector specifying font family.}
 
@@ -75,7 +76,7 @@ fviz_add(p, coord, color ="blue", geom="arrow")
  
 }
 \references{
-http://www.sthda.com
+\url{https://www.sthda.com/english/}
 }
 \author{
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}
