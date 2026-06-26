@@ -12,7 +12,9 @@ fviz_dend(
   palette = NULL,
   show_labels = TRUE,
   color_labels_by_k = TRUE,
+  match_coord_colors = FALSE,
   label_cols = NULL,
+  labels_font = "plain",
   labels_track_height = NULL,
   repel = FALSE,
   lwd = 0.7,
@@ -51,10 +53,19 @@ scientific journal palettes from ggsci R package, e.g.: "npg", "aaas",
 \item{show_labels}{a logical value. If TRUE, leaf labels are shown. Default 
 value is TRUE.}
 
-\item{color_labels_by_k}{logical value. If TRUE, labels are colored 
+\item{color_labels_by_k}{logical value. If TRUE, labels are colored
 automatically by group when k != NULL.}
 
+\item{match_coord_colors}{logical value. Default is FALSE, where dendrogram
+colors follow the left-to-right leaf order. If TRUE, cluster colors are
+remapped to cluster-label order so they match \code{\link{fviz_cluster}()}
+and \code{\link{fviz_silhouette}()} for the same clustering.}
+
 \item{label_cols}{a vector containing the colors for labels.}
+
+\item{labels_font}{font face for the leaf labels of "rectangle"/"circular"
+dendrograms. One of "plain" (default), "bold", "italic" or "bold.italic".
+Default "plain" leaves labels unchanged.}
 
 \item{labels_track_height}{a positive numeric value for adjusting the room for the 
 labels. Used only when type = "rectangle".}
@@ -62,16 +73,20 @@ labels. Used only when type = "rectangle".}
 \item{repel}{logical value. Use repel = TRUE to avoid label overplotting when
 type = "phylogenic".}
 
-\item{lwd}{a numeric value specifying branches and rectangle line width.}
+\item{lwd}{a numeric value specifying dendrogram branch and rectangle line
+width.}
 
 \item{type}{type of plot. Allowed values are one of "rectangle", "triangle", 
 "circular", "phylogenic".}
 
 \item{phylo_layout}{the layout to be used for phylogenic trees. Default value
-is "layout.auto". Allowed values include: 
-\code{\link[igraph]{layout.auto}}, \code{\link[igraph]{layout_with_drl}}, 
-\code{\link[igraph]{layout_as_tree}}, \code{\link[igraph]{layout.gem}},
-\code{\link[igraph]{layout.mds}} and \code{\link[igraph]{layout_with_lgl}}.}
+is "layout.auto", which is kept as a compatibility alias for
+\code{"layout_nicely"}. Allowed values include:
+\code{\link[igraph]{layout.auto}}, \code{\link[igraph]{layout_nicely}},
+\code{\link[igraph]{layout_with_drl}}, \code{\link[igraph]{layout_as_tree}},
+\code{\link[igraph]{layout.gem}}, \code{\link[igraph]{layout_with_gem}},
+\code{\link[igraph]{layout.mds}}, \code{\link[igraph]{layout_with_mds}} and
+\code{\link[igraph]{layout_with_lgl}}.}
 
 \item{rect}{logical value specifying whether to add a rectangle around 
 groups. Used only when k != NULL.}
@@ -89,8 +104,9 @@ around clusters. Ignored when rect = FALSE.}
 
 \item{main, xlab, ylab}{main and axis titles}
 
-\item{sub}{Plot subtitle. If NULL, the method used hierarchical clustering is
-shown. To remove the subtitle use sub = "".}
+\item{sub}{Plot subtitle. Default is NULL (no subtitle). Set to a character
+string to display a subtitle below the title, e.g.
+\code{sub = paste0("Method: ", "ward.D2")}.}
 
 \item{ggtheme}{function, ggplot2 theme name. Default value is 
 theme_classic(). Allowed values include ggplot2 official themes: 
@@ -121,6 +137,9 @@ res.hc <- hclust(dist(df))
 # Default plot
 fviz_dend(res.hc)
 
+# Increase branch and rectangle line widths
+fviz_dend(res.hc, lwd = 2)
+
 # Cut the tree
 fviz_dend(res.hc, cex = 0.5, k = 4, color_labels_by_k = TRUE)
 
@@ -143,6 +162,13 @@ fviz_dend(res.hc, k = 4,
  fviz_dend(res.hc, k = 4, 
    k_colors = c("blue", "green3", "red", "black"),
    label_cols =  km.clust[res.hc$order], cex = 0.6)
+
+ # Phylogenic tree layouts support both compatibility aliases and
+ # current igraph layout names
+ if (requireNamespace("igraph", quietly = TRUE)) {
+   fviz_dend(res.hc, type = "phylogenic", phylo_layout = "layout_nicely",
+             show_labels = FALSE)
+ }
 
 }
 }

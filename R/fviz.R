@@ -1,7 +1,7 @@
 #' @include utilities.R
 NULL
-#'Visualizing Multivariate Analyse Outputs
-#'@description Generic function to create a scatter plot of multivariate analyse
+#'Visualizing Multivariate Analysis Outputs
+#'@description Generic function to create a scatter plot of multivariate analysis
 #'  outputs, including PCA, CA, MCA and MFA.
 #'@inheritParams facto_summarize
 #'@param geom a text specifying the geometry to be used for the graph. Default 
@@ -21,6 +21,8 @@ NULL
 #'@param pointsize the size of points
 #'@param pointshape the shape of points
 #'@param arrowsize the size of arrows. Controls the thickness of arrows.
+#'@param arrow.linetype linetype of the variable arrows (e.g. "solid",
+#'  "dashed", "dotted"). Default is "solid".
 #'@param title the title of the graph
 #'@param repel a boolean, whether to use ggrepel to avoid overplotting text
 #'  labels or not. The old \code{jitter} argument is kept for backward
@@ -56,6 +58,18 @@ NULL
 #'@param col.circle a color for the correlation circle. Used only when X is a 
 #'  PCA output.
 #'@param circlesize the size of the variable correlation circle.
+#'@param add.circle logical or NULL controlling the variable correlation circle.
+#'  Default NULL shows it only when meaningful: for PCA variables on
+#'  unit-variance (scaled) data, and for quantitative variables of
+#'  MCA/MFA/HMFA/FAMD. Use \code{add.circle = TRUE} to force the circle (e.g. a
+#'  \code{prcomp(scale = FALSE)} fit on data you scaled manually) or
+#'  \code{add.circle = FALSE} to suppress it.
+#'@param rotate.labels logical. If \code{TRUE}, the text labels of the plotted
+#'  element are rotated to the angle of their arrows (ggbiplot style); labels in
+#'  the left half-plane are flipped to stay upright. Default is \code{FALSE}
+#'  (no rotation). Use together with \code{repel = FALSE}, as ggrepel ignores the
+#'  label angle. Most useful for variable plots/biplots (e.g.
+#'  \code{fviz_pca_var}, \code{fviz_pca_biplot}).
 #'@param axes.linetype linetype of x and y axes.
 #'@param color color to be used for the specified geometries (point, text). Can 
 #'  be a continuous variable or a factor variable. Possible values include also 
@@ -126,15 +140,18 @@ NULL
 #'  }
 #'@export
 fviz <- function(X, element, axes = c(1, 2), geom = "auto",
-                          label = "all", invisible="none", labelsize=4, 
+                          label = "all", invisible="none", labelsize=4,
                           pointsize = 1.5, pointshape = 19, arrowsize = 0.5,
-                          habillage="none", addEllipses=FALSE, ellipse.level = 0.95, 
+                          arrow.linetype = "solid",
+                          habillage="none", addEllipses=FALSE, ellipse.level = 0.95,
                           ellipse.type = "norm", ellipse.alpha = 0.1, mean.point = TRUE,
                           color = "black", fill = "white", alpha = 1, gradient.cols = NULL,
                           col.row.sup = "darkblue", col.col.sup="darkred",
                           select = list(name = NULL, cos2 = NULL, contrib = NULL),
                           title = NULL, axes.linetype = "dashed",
-                          repel = FALSE, col.circle ="grey70", circlesize = 0.5, ggtheme = theme_minimal(),
+                          repel = FALSE, col.circle ="grey70", circlesize = 0.5, add.circle = NULL,
+                          rotate.labels = FALSE,
+                          ggtheme = theme_minimal(),
                           ggp = NULL, font.family = "",
                            ...)
   {
@@ -159,6 +176,7 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
     element_desc <- list(ind = "Individuals", var = "Variables",
                          col = "Column points", row = "Row points",
                          mca.cor = "Variables", quanti.sup = "Quantitative variables",
+                         quali.sup = "Supplementary qualitative variable categories",
                          quanti.var = "Quantitative variables",
                          quali.var = "Qualitative variable categories",
                          group = "Variable groups", partial.axes = "Partial axes")
@@ -197,8 +215,10 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   }
   # Augment data if color is a continuous variable or a factor variable
   if(length(color) > 1){
-    if(nrow(df) != length(color)) stop("The length of color variable",
-                                    "should be the same as the number of rows in the data.")
+    if(nrow(df) != length(color)) stop(
+      "The length of the `color` variable must equal the number of elements being ",
+      "plotted (individuals for fviz_*_ind(), variables for fviz_*_var()), or be a ",
+      "single value or a metric such as \"cos2\"/\"contrib\".", call. = FALSE)
     .col.name <- "Col."
     df[[.col.name]] <- color
     if(missing(pointshape) && .is_grouping_var(color)) pointshape <- .col.name
@@ -206,11 +226,28 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   }
   # Augment data if fill is a continuous variable or a factor variable
   if(length(fill) > 1){
-    if(nrow(df) != length(fill)) stop("The length of fill variable",
-                                       "should be the same as the number of rows in the data.")
+    if(nrow(df) != length(fill)) stop(
+      "The length of the `fill` variable must equal the number of elements being ",
+      "plotted (individuals for fviz_*_ind(), variables for fviz_*_var()), or be a ",
+      "single value or a metric such as \"cos2\"/\"contrib\".", call. = FALSE)
     .col.name <- "Fill."
     df[[.col.name]] <- fill
     fill <- .col.name
+  }
+  # Augment the data if pointshape is a grouping (factor/character) variable,
+  # so points can be shaped by a DIFFERENT factor than `color`/habillage (e.g.
+  # colour individuals by one variable and set their shape by another). Gated on
+  # pointshape being a grouping var; the default numeric pointshape (e.g. 19) is
+  # untouched, so existing plots are byte-identical. The `if(missing(pointshape))`
+  # guards above already prevent colour/habillage from overwriting it. (#36, #51)
+  if(.is_grouping_var(pointshape)){
+    if(nrow(df) != length(pointshape)) stop(
+      "The length of the `shape`/`shape.ind` variable must equal the number of ",
+      "elements being plotted (individuals for fviz_*_ind()), or be a single ",
+      "value.", call. = FALSE)
+    .shape.name <- "Shape."
+    df[[.shape.name]] <- as.factor(pointshape)
+    pointshape <- .shape.name
   }
   # Augment the data, if pointsize is a continuous variable
   if(length(pointsize) > 1){
@@ -222,6 +259,9 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   df.all <- df
   if(!is.null(select) && !is.null(select$name) && .factominer_needs_category_map(facto.class, element)){
     select$name <- map_factominer_legacy_names(X, select$name, element = element)
+  }
+  if(!is.null(select) && !is.null(select$contrib) && !("contrib" %in% colnames(df))){
+    stop("Contributions are not available for element = '", element, "'.")
   }
   if(!is.null(select)) df <- .select(df, select)
   
@@ -245,8 +285,12 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   
   label <- NULL
   if(lab[[element]] && "text" %in% geom && !hide[[element]]) label <- "name"
-  
-  p <- ggplot() 
+
+  # Layers already present (when chaining via ggp, e.g. biplots) so we only
+  # restyle the text labels added for THIS element below (#130).
+  n_layers_before <- if(is.null(ggp)) 0L else length(ggp$layers)
+
+  p <- ggplot()
   if(hide[[element]]) {
     # FIX: ggplot2 3.0.0+ deprecation - aes_string() replaced with aes() + .data pronoun
     # See: https://github.com/kassambara/factoextra/issues/190
@@ -262,7 +306,30 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
                          main = title, ggtheme = ggtheme, ggp = ggp, font.family = font.family, ...)
   if(alpha %in% c("cos2","contrib", "coord", "x", "y"))
     p <- p + scale_alpha(limits = range(df.all[, alpha]))
-  
+
+  # Apply a numeric alpha to this element's text labels too, not just its
+  # points/arrows, so e.g. alpha.var fades the variable names as well (#130).
+  # Gated on a numeric alpha < 1, so the default (alpha = 1) and metric-mapped
+  # alpha ("cos2"/"contrib"/...) paths are byte-identical. Only restyles labels
+  # added for this element (index > n_layers_before), preserving other layers
+  # when chaining via ggp (e.g. biplots).
+  if(is.numeric(alpha) && length(alpha) == 1 && !is.na(alpha) && alpha < 1){
+    .text_geoms <- c("GeomText", "GeomTextRepel", "GeomLabel", "GeomLabelRepel")
+    for(i in seq_along(p$layers)){
+      if(i > n_layers_before && inherits(p$layers[[i]]$geom, .text_geoms))
+        p$layers[[i]]$aes_params$alpha <- alpha
+    }
+  }
+
+  # Optionally rotate this element's text labels to the angle of their arrows
+  # (ggbiplot style). Gated on rotate.labels = TRUE, so the default is
+  # byte-identical. Restricted to elements that actually draw arrows ("arrow" in
+  # geom), i.e. variable plots: this keeps biplots from rotating the individual
+  # labels (whose angle would be meaningless). Works with plain geom_text (use
+  # repel = FALSE); ggrepel ignores the angle aesthetic. (#98)
+  if(isTRUE(rotate.labels) && "arrow" %in% geom)
+    p <- .rotate_text_labels(p, n_layers_before)
+
   if(!is.null(gradient.cols))
     p <- p + ggpubr::gradient_color(gradient.cols)
     
@@ -270,14 +337,21 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   if(is.null(extra_args$legend)) p <- p + theme(legend.position = "right" )
   # Add arrows
   if("arrow" %in% geom && !hide[[element]])
-    p <- p + .arrows(data = df, color = color, alpha = alpha, linewidth = arrowsize)
-  # Add correlation circle if PCA & element = "var" & scale = TRUE
+    p <- p + .arrows(data = df, color = color, alpha = alpha, linewidth = arrowsize,
+                     linetype = arrow.linetype)
+  # Add correlation circle. By default (add.circle = NULL) the circle is shown
+  # only when it is meaningful: for PCA variables on unit-variance (scaled) data,
+  # and for quanti variables of MCA/MFA/HMFA/FAMD. add.circle = TRUE/FALSE forces
+  # or suppresses it (e.g. force it for a prcomp(scale = FALSE) on data the user
+  # scaled manually). (#88)
+  .want_circle <- function(default) if(is.null(add.circle)) isTRUE(default) else isTRUE(add.circle)
   if(facto.class == "PCA" && element == "var"){
-    if(.get_scale_unit(X) && is.null(extra_args$scale.)) 
+    if(.want_circle(.get_scale_unit(X) && is.null(extra_args$scale.)))
       p <- .add_corr_circle(p, color = col.circle, size = circlesize)
   }
   else if(facto.class %in% c("MCA", "MFA", "HMFA", "FAMD") && element %in% c("quanti.sup", "quanti.var", "partial.axes")){
-      p <- .add_corr_circle(p, color = col.circle, size = circlesize)
+      if(.want_circle(TRUE))
+        p <- .add_corr_circle(p, color = col.circle, size = circlesize)
   }
   # Faceting when multiple variables are used to color individuals
   # (e.g., habillage = 1:2, or data.frame)
@@ -349,15 +423,43 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
 .get_scale_unit <-function(X){
   scale_unit <- FALSE
   if(inherits(X, 'PCA')) scale_unit <- X$call$scale.unit
-  else if(inherits(X, "prcomp" )) scale_unit <- is.numeric(X$scale) 
-  else if(inherits(X, "princomp")) scale_unit <- length(unique(X$scale))>1 
+  else if(inherits(X, "prcomp" )) scale_unit <- is.numeric(X$scale)
+  else if(inherits(X, "princomp")) scale_unit <- length(unique(X$scale))>1
+  else if(inherits(X, "factoextra_pca")) scale_unit <- isTRUE(X$scale.unit)
   else if(inherits(X, "expoOutput")) scale_unit <- !all(X$ExPosition.Data$scale==1) 
-  else if(inherits(X, "pca") && inherits(X, "dudi")) scale_unit <- length(unique(X$norm)) > 1 
+  else if(inherits(X, "pca") && inherits(X, "dudi")) scale_unit <- length(unique(X$norm)) > 1
+  # ade4 between-/within-class PCA: $co holds projections (not variable
+  # correlations bounded by 1), so the correlation circle does not apply.
+  else if(inherits(X, c("between", "within")) && inherits(X, "dudi")) scale_unit <- FALSE
   else {
     warning(".get_scale_unit function: can't handle an object of class ",
             paste(class(X), collapse = ", "))
   }
   scale_unit
+}
+
+# Rotate the text labels of the layers added for the current element so each
+# label is aligned with its arrow direction (ggbiplot style). Labels in the
+# left half-plane are flipped by 180 degrees so they stay upright/readable.
+# Only layers with index > n_layers_before are touched, preserving any layers
+# carried in via ggp (e.g. the individuals layer of a biplot). (#98)
+.rotate_text_labels <- function(p, n_layers_before = 0L){
+  .text_geoms <- c("GeomText", "GeomTextRepel", "GeomLabel", "GeomLabelRepel")
+  for(i in seq_along(p$layers)){
+    if(i <= n_layers_before) next
+    layer <- p$layers[[i]]
+    if(!inherits(layer$geom, .text_geoms)) next
+    ld <- as.data.frame(layer$data)
+    if(is.null(ld) || !all(c("x", "y") %in% names(ld)) || nrow(ld) == 0) next
+    ang <- atan2(ld$y, ld$x) * 180 / pi
+    flip <- ang > 90 | ang < -90
+    ang[flip] <- ang[flip] + 180
+    ld[[".fviz_angle"]] <- ang
+    p$layers[[i]]$data <- ld
+    p$layers[[i]]$mapping <- utils::modifyList(
+      layer$mapping, ggplot2::aes(angle = .data[[".fviz_angle"]]))
+  }
+  p
 }
 
 # Add correlation circle to variables plot
@@ -377,13 +479,14 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
 # Add arrow to the plot
 # FIX: ggplot2 3.4.0+ deprecation - size replaced with linewidth for geom_segment
 .arrows <- function(data, color = "black", alpha = 1, linewidth = 0.5,
-                    origin = 0, xend = "x", yend = "y"){
+                    linetype = "solid", origin = 0, xend = "x", yend = "y"){
   origin <- rep(origin, nrow(data))
   dd <- cbind.data.frame(data, xstart = origin, ystart = origin)
   ggpubr::geom_exec(geom_segment, data = dd,
                     x = "xstart", y = "ystart", xend = xend, yend = yend,
                     arrow = grid::arrow(length = grid::unit(0.2, 'cm')),
-                    color = color, alpha = alpha, linewidth = linewidth)
+                    color = color, alpha = alpha, linewidth = linewidth,
+                    linetype = linetype)
 }
 
 
@@ -411,6 +514,8 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   else if(element %in% "var" && inherits(X, "MCA") && !hide$quali.sup)
     res <- list(name = "quali.sup", addlabel = (lab$quali.sup && "text" %in% geom))
   else if(element %in% "quali.var" && inherits(X, "MFA") && !hide$quali.sup)
+    res <- list(name = "quali.sup", addlabel = (lab$quali.sup && "text" %in% geom))
+  else if(element %in% "quali.var" && inherits(X, "FAMD") && !hide$quali.sup)
     res <- list(name = "quali.sup", addlabel = (lab$quali.sup && "text" %in% geom))
   else if(element %in% "var" && inherits(X, "FAMD") && !hide$quanti.sup)
     res <- list(name = "quanti.sup", addlabel = (lab$quanti.sup && "text" %in% geom))

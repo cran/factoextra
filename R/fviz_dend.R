@@ -15,21 +15,32 @@
 #'   "lancet", "jco", "ucscgb", "uchicago", "simpsons" and "rickandmorty".
 #' @param show_labels a logical value. If TRUE, leaf labels are shown. Default 
 #'   value is TRUE.
-#' @param color_labels_by_k logical value. If TRUE, labels are colored 
+#' @param color_labels_by_k logical value. If TRUE, labels are colored
 #'   automatically by group when k != NULL.
+#' @param match_coord_colors logical value. Default is FALSE, where dendrogram
+#'   colors follow the left-to-right leaf order. If TRUE, cluster colors are
+#'   remapped to cluster-label order so they match \code{\link{fviz_cluster}()}
+#'   and \code{\link{fviz_silhouette}()} for the same clustering.
 #' @param label_cols a vector containing the colors for labels.
+#' @param labels_font font face for the leaf labels of "rectangle"/"circular"
+#'   dendrograms. One of "plain" (default), "bold", "italic" or "bold.italic".
+#'   Default "plain" leaves labels unchanged.
 #' @param labels_track_height a positive numeric value for adjusting the room for the 
 #'   labels. Used only when type = "rectangle".
 #' @param repel logical value. Use repel = TRUE to avoid label overplotting when
 #'   type = "phylogenic".
-#' @param lwd a numeric value specifying branches and rectangle line width.
+#' @param lwd a numeric value specifying dendrogram branch and rectangle line
+#'   width.
 #' @param type type of plot. Allowed values are one of "rectangle", "triangle", 
 #'   "circular", "phylogenic".
 #' @param phylo_layout the layout to be used for phylogenic trees. Default value
-#'   is "layout.auto". Allowed values include: 
-#'   \code{\link[igraph]{layout.auto}}, \code{\link[igraph]{layout_with_drl}}, 
-#'   \code{\link[igraph]{layout_as_tree}}, \code{\link[igraph]{layout.gem}},
-#'   \code{\link[igraph]{layout.mds}} and \code{\link[igraph]{layout_with_lgl}}.
+#'   is "layout.auto", which is kept as a compatibility alias for
+#'   \code{"layout_nicely"}. Allowed values include:
+#'   \code{\link[igraph]{layout.auto}}, \code{\link[igraph]{layout_nicely}},
+#'   \code{\link[igraph]{layout_with_drl}}, \code{\link[igraph]{layout_as_tree}},
+#'   \code{\link[igraph]{layout.gem}}, \code{\link[igraph]{layout_with_gem}},
+#'   \code{\link[igraph]{layout.mds}}, \code{\link[igraph]{layout_with_mds}} and
+#'   \code{\link[igraph]{layout_with_lgl}}.
 #' @param rect logical value specifying whether to add a rectangle around 
 #'   groups. Used only when k != NULL.
 #' @param rect_border,rect_lty border color and line type for rectangles.
@@ -39,8 +50,9 @@
 #' @param horiz a logical value. If TRUE, an horizontal dendrogram is drawn.
 #' @param cex size of labels
 #' @param main,xlab,ylab main and axis titles
-#' @param sub Plot subtitle. If NULL, the method used hierarchical clustering is
-#'   shown. To remove the subtitle use sub = "".
+#' @param sub Plot subtitle. Default is NULL (no subtitle). Set to a character
+#'   string to display a subtitle below the title, e.g.
+#'   \code{sub = paste0("Method: ", "ward.D2")}.
 #' @param ggtheme function, ggplot2 theme name. Default value is 
 #'   theme_classic(). Allowed values include ggplot2 official themes: 
 #'   theme_gray(), theme_bw(), theme_minimal(), theme_classic(), theme_void(), 
@@ -60,6 +72,9 @@
 #' 
 #' # Default plot
 #' fviz_dend(res.hc)
+#'
+#' # Increase branch and rectangle line widths
+#' fviz_dend(res.hc, lwd = 2)
 #' 
 #' # Cut the tree
 #' fviz_dend(res.hc, cex = 0.5, k = 4, color_labels_by_k = TRUE)
@@ -84,10 +99,18 @@
 #'    k_colors = c("blue", "green3", "red", "black"),
 #'    label_cols =  km.clust[res.hc$order], cex = 0.6)
 #' 
+#'  # Phylogenic tree layouts support both compatibility aliases and
+#'  # current igraph layout names
+#'  if (requireNamespace("igraph", quietly = TRUE)) {
+#'    fviz_dend(res.hc, type = "phylogenic", phylo_layout = "layout_nicely",
+#'              show_labels = FALSE)
+#'  }
+#' 
 #' }
 #' @export
 fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  show_labels = TRUE, color_labels_by_k = TRUE,
-                      label_cols = NULL,  labels_track_height = NULL, repel = FALSE, lwd = 0.7,
+                      match_coord_colors = FALSE,
+                      label_cols = NULL, labels_font = "plain", labels_track_height = NULL, repel = FALSE, lwd = 0.7,
                       type = c("rectangle",  "circular", "phylogenic"),
                       phylo_layout = "layout.auto",
                       rect = FALSE, rect_border = "gray", rect_lty = 2, rect_fill = FALSE, lower_rect,
@@ -106,8 +129,11 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   rectangle <- type == "rectangle"
   
   if(inherits(x, "HCPC")){
-    k <- length(unique(x$data.clust$clust))
-    #k <- x$call$t$nb.clust
+    # Honor an explicit k; default to the number of HCPC clusters when k is
+    # NULL. The previous code always overwrote k, so a user-supplied k (e.g.
+    # fviz_dend(hcpc, k = 5)) was silently ignored and colored at the HCPC
+    # cluster count instead. (#81)
+    if(is.null(k)) k <- length(unique(x$data.clust$clust))
     x <- x$call$t$tree #hclust
   }
     
@@ -132,7 +158,8 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   else stop("Can't handle an object of class ", paste(class(x), collapse =", ") )
   if(is.null(method)) method <- ""
   else if(is.na(method)) method <- ""
-  if(is.null(sub) && method != "") sub = paste0("Method: ", method)
+  # `sub` defaults to NULL (no subtitle), preserving the previous appearance.
+  # When set, it is rendered via labs(subtitle=) below (#54).
   
   if(!is.null(dendextend::labels_cex(dend))) cex <- dendextend::labels_cex(dend)
   dend <- dendextend::set(dend, "labels_cex", cex) 
@@ -142,8 +169,16 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   if(!is.null(k)) {
     if(.is_color_palette(k_colors)) k_colors <- ggpubr::get_palette(k_colors, k = k)
     else if(is.null(k_colors)) k_colors <- ggpubr::get_palette("default", k = k)
-    dend <- dendextend::set(dend, what = "branches_k_color", k = k, value = k_colors)
-    if(color_labels_by_k) dend <- dendextend::set(dend, "labels_col",  k = k, value = k_colors)
+    # By default colours follow the left-to-right leaf order (dendextend). With
+    # match_coord_colors = TRUE, remap them to cluster-label order so they match
+    # fviz_cluster()/fviz_silhouette() for the same clustering (#103).
+    branch_colors <- k_colors
+    if(match_coord_colors){
+      ord <- .coord_color_order(dend, k)
+      if(!is.null(ord)) branch_colors <- k_colors[ord]
+    }
+    dend <- dendextend::set(dend, what = "branches_k_color", k = k, value = branch_colors)
+    if(color_labels_by_k) dend <- dendextend::set(dend, "labels_col",  k = k, value = branch_colors)
   }
   
   if(!is.null(label_cols)){
@@ -164,9 +199,9 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   if(rectangle || circular){
     p <- .ggplot_dend(dend, type = "rectangle", offset_labels = offset_labels, nodes = FALSE,
                       ggtheme = ggtheme, horiz = horiz, circular = circular, palette = palette,
-                      labels = show_labels, label_cols = label_cols, 
+                      labels = show_labels, label_cols = label_cols, labels_font = labels_font,
                       labels_track_height = labels_track_height, ...)
-    if(!circular) p <- p + labs(title = main, x = xlab, y = ylab)
+    if(!circular) p <- p + labs(title = main, subtitle = sub, x = xlab, y = ylab)
   }
   else if(phylogenic){
     p <- .phylogenic_tree(dend, labels = show_labels, label_cols = label_cols,
@@ -176,13 +211,24 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   # Add rectangle around clusters
   if(circular || phylogenic || is.null(k)) rect <- FALSE
   if(rect_fill && missing(rect_lty)) rect_lty = "blank"
-  if(missing(lower_rect)) lower_rect = -(labels_track_height+0.5)
+  if(missing(lower_rect)) {
+    # The absolute -0.5 offset overwhelms short trees (e.g. correlation/gower
+    # distances with max height < 1), pushing the rectangles far below the
+    # labels. For those, scale the offset to the tree height instead; taller
+    # trees (>= 1) keep the previous default unchanged (#55).
+    lower_rect <- if(max_height < 1) -(labels_track_height + max_height/8)
+                  else -(labels_track_height + 0.5)
+  }
   if(rect){
     p <- p + .rect_dendrogram(dend, k = k, palette = rect_border, rect_fill = rect_fill,
-                              rect_lty = rect_lty, linewidth = lwd, 
-                              lower_rect = lower_rect)
+                              rect_lty = rect_lty, linewidth = lwd,
+                              lower_rect = lower_rect, match_coord_colors = match_coord_colors)
   }
   
+  # Keep the leaf-label text layer out of the legend (no stray "a" glyph),
+  # mirroring the scatter-plot cleanup in .fviz_finish() (#14).
+  p <- .hide_text_legend(p)
+
   attr(p, "dendrogram") <- dend
   structure(p, class = c(class(p), "fviz_dend"))
   return(p)
@@ -200,18 +246,21 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   }
   
   
-  allowed_layouts <- c("layout.auto", "layout_with_drl", "layout_as_tree", 
-                      "layout.gem", "layout.mds", "layout_with_lgl")
+  allowed_layouts <- c("layout.auto", "layout_nicely", "layout_with_drl", "layout_as_tree",
+                      "layout.gem", "layout_with_gem", "layout.mds", "layout_with_mds", "layout_with_lgl")
   
   if(!(phylo_layout %in% allowed_layouts)) stop( phylo_layout, " is not supported as layout. ", "Allowed phylogenic layout are: ",
                                                 paste( allowed_layouts, collapse = ", "))
   
   layout_func <- switch(phylo_layout,
-                        layout.auto = igraph::layout.auto,
+                        layout.auto = igraph::layout_nicely,
+                        layout_nicely = igraph::layout_nicely,
                         layout_with_drl = igraph::layout_with_drl,
                         layout_as_tree = igraph::layout_as_tree,
-                        layout.gem = igraph::layout.gem,
-                        layout.mds = igraph::layout.mds,
+                        layout.gem = igraph::layout_with_gem,
+                        layout_with_gem = igraph::layout_with_gem,
+                        layout.mds = igraph::layout_with_mds,
+                        layout_with_mds = igraph::layout_with_mds,
                         layout_with_lgl = igraph::layout_with_lgl
                         )
   
@@ -221,7 +270,7 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   graph_edges <- phylo_tree$edge
   
   # get graph from edge list
-  graph_net <- igraph::graph.edgelist(graph_edges)
+  graph_net <- igraph::graph_from_edgelist(graph_edges)
   
   # extract layout (x-y coords)
   graph_layout <- .with_preserved_seed(123, layout_func(graph_net))
@@ -285,7 +334,7 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
 .ggplot_dend <- function (dend, segments = TRUE, labels = TRUE, nodes = TRUE, 
                         horiz = FALSE, ggtheme = theme_classic(), 
                         offset_labels = 0, circular = FALSE, type = "rectangle",
-                        palette = NULL, label_cols = NULL, labels_track_height = 1,
+                        palette = NULL, label_cols = NULL, labels_font = "plain", labels_track_height = 1,
                         ...) {
   
   gdend <- dendextend::as.ggdend(dend, type = type)
@@ -322,8 +371,8 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
                  colour = .data[["col"]], linetype = .data[["lty"]], linewidth = .data[["lwd"]]), lineend = "square") +
       # FIX: ggplot2 3.3.4+ deprecation - use "none" instead of FALSE for guides()
       # See: https://github.com/kassambara/factoextra/issues/179
-      guides(linetype = "none", col = "none") + #scale_colour_identity() +
-      scale_size_identity() + scale_linetype_identity()
+      guides(linetype = "none", col = "none", linewidth = "none") + #scale_colour_identity() +
+      scale_linewidth_identity() + scale_linetype_identity()
     if(is.null(palette)) p <- p + scale_colour_identity()
   }
   if (nodes) {
@@ -343,6 +392,10 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
     p <- p + ggpubr::geom_exec(geom_text, data = data$labels,
                                x = "x", y = "y", label = "label", color = label_cols, size = "cex",
                                 angle = "angle", hjust = "hjust", vjust = "vjust")
+    # Apply a single font face to all leaf labels (e.g. "italic") as a fixed
+    # layer parameter. Only when non-default, so the "plain" path is untouched (#121).
+    if(!identical(labels_font, "plain"))
+      p$layers[[length(p$layers)]]$aes_params$fontface <- labels_font
   }
   p <- ggpubr::ggpar(p, ggtheme = ggtheme, palette = palette, ...) + theme(axis.line = element_blank())
   if (horiz && !circular) {
@@ -451,14 +504,34 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
 }
 
 
+# Left-to-right cluster-label order of a dendrogram cut into k groups.
+# dendextend colours branches in leaf (left-to-right) order, whereas
+# fviz_cluster()/fviz_silhouette() colour by cluster label. Remapping a length-k
+# colour vector by this order makes the colours match across the three plots
+# (#103). Returns NULL when the cut is not a clean permutation of seq_len(k).
+.coord_color_order <- function(dend, k){
+  # dendextend colours the g-th cluster in LEAF (left-to-right) order with
+  # value[g]. fviz_cluster()/fviz_silhouette() colour by the DATA-order cluster
+  # label (cutree's labelling). So value[g] should be k_colors[ data-label of the
+  # g-th leaf cluster ]. That permutation is the data-order labels read in leaf
+  # order: unique(cutree(.., as_data = TRUE)[order.dendrogram(dend)]).
+  cl  <- tryCatch(dendextend::cutree(dend, k = k, order_clusters_as_data = TRUE),
+                  error = function(e) NULL)
+  ord <- tryCatch(stats::order.dendrogram(dend), error = function(e) NULL)
+  if(is.null(cl) || is.null(ord) || length(cl) != length(ord)) return(NULL)
+  lr <- unique(cl[ord])
+  lr <- lr[!is.na(lr)]
+  if(length(lr) == k && setequal(lr, seq_len(k))) as.integer(lr) else NULL
+}
+
 # Add rectangle to a dendrogram
 # lower_rect: a (scalar) value of how low should the lower part of the rect be.
-.rect_dendrogram <- function (dend, k = NULL,  h = NULL, 
-                             k_colors = NULL, palette = NULL, rect_fill = FALSE, rect_lty = 2, 
-                             lower_rect=-1.5, 
-          ...) 
+.rect_dendrogram <- function (dend, k = NULL,  h = NULL,
+                             k_colors = NULL, palette = NULL, rect_fill = FALSE, rect_lty = 2,
+                             lower_rect=-1.5, match_coord_colors = FALSE,
+          ...)
 {
-  
+
   if(missing(k_colors) && !is.null(palette)) k_colors <- palette
   # value (should be between 0 to 1): proportion of the height 
   # our rect will be between the height needed for k and k+1 clustering.
@@ -482,19 +555,24 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   m <- c(0, cumsum(clustab))
   which <- 1L:k
   
+  # Collapse height lookups to a single value: tied merge heights can make
+  # `names(tree_heights) == k` match more than one entry, which would make
+  # ytop (and thus the rectangle data frame) longer than k rows and break the
+  # geom_rect aesthetics. Well-behaved dendrograms match exactly one (#154, #168).
+  k_height <- tree_heights[names(tree_heights) == k]
+  k_height <- if (length(k_height) == 0) 0 else max(k_height)
+  next_k_height <- tree_heights[names(tree_heights) == k + 1]
+  if (length(next_k_height) == 0) {
+    next_k_height <- 0
+    prop_k_height <- 1
+  } else next_k_height <- max(next_k_height)
+
   xleft <- ybottom <- xright <- ytop <- list()
   for (n in seq_along(which)) {
-    next_k_height <- tree_heights[names(tree_heights) == k + 1]
-    if (length(next_k_height) == 0) {
-      next_k_height <- 0
-      prop_k_height <- 1
-    }
-    
     xleft[[n]] = m[which[n]] + 0.66
     ybottom[[n]] = lower_rect
     xright[[n]] = m[which[n] + 1] + 0.33
-    ytop[[n]] <- tree_heights[names(tree_heights) == k] * 
-      prop_k_height + next_k_height * (1 - prop_k_height)
+    ytop[[n]] <- k_height * prop_k_height + next_k_height * (1 - prop_k_height)
   }
   
   df <- data.frame(xmin = unlist(xleft), ymin = unlist(ybottom), xmax = unlist(xright), ymax = unlist(ytop))
@@ -505,8 +583,15 @@ fviz_dend <- function(x, k = NULL, h = NULL, k_colors = NULL, palette = NULL,  s
   # See: https://github.com/kassambara/factoextra/issues/163, #180
   if(length(color) == 1 && color == "cluster") color <- "default"
   if(.is_color_palette(color)) color <- ggpubr::get_palette(color, k = k)
-  else if(length(color) > 1 && length(color) < k){
-    color <- rep(color, k)[1:k]
+  else if(length(color) > 1 && length(color) != k){
+    # recycle/trim a multi-colour vector to exactly k (one per rectangle)
+    color <- rep_len(color, k)
+  }
+  # Align rectangle colours to cluster-label order (matches branch/label colours
+  # and fviz_cluster()/fviz_silhouette()) when requested (#103).
+  if(match_coord_colors && length(color) == k){
+    ord <- .coord_color_order(dend, k)
+    if(!is.null(ord)) color <- color[ord]
   }
   if(rect_fill){
     fill <- color

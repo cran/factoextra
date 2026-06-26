@@ -2,21 +2,26 @@
 NULL
 #' Subset and summarize the output of factor analyses
 #' 
-#' @description Subset and summarize the results of Principal Component Analysis
-#'   (PCA), Correspondence Analysis (CA), Multiple Correspondence Analysis
-#'   (MCA), Factor Analysis of Mixed Data (FAMD), Multiple Factor Analysis
-#'   (MFA) and Hierarchical Multiple Factor Analysis (HMFA) functions from several packages.
+#' @description Subset and summarize the results of Principal Component
+#'   Analysis (PCA), Correspondence Analysis (CA), Multiple Correspondence
+#'   Analysis (MCA), Factor Analysis of Mixed Data (FAMD), Multiple Factor
+#'   Analysis (MFA) and Hierarchical Multiple Factor Analysis (HMFA) functions
+#'   from several packages. Axis indices are validated before extraction, and
+#'   MCA quantitative supplementary summaries inherit the package-level error
+#'   raised when that result is unavailable.
 #' @param X an object of class PCA, CA, MCA, FAMD, MFA and HMFA [FactoMineR]; prcomp
 #'   and princomp [stats]; dudi, pca, coa and acm [ade4]; ca [ca package]; expoOutput [ExPosition].
-#' @param element the element to subset from the output. Possible values are 
-#'   "row" or "col" for CA; "var" or "ind" for PCA and MCA; "mca.cor" for MCA; 
-#'   'quanti.var', 'quali.var' , 'group' or 'ind' for FAMD, MFA and HMFA.
+#' @param element the element to subset from the output. Possible values are
+#'   "row" or "col" for CA; "var", "ind", "mca.cor" or "quanti.sup" for MCA;
+#'   "var" or "ind" for PCA; and 'quanti.var', 'quali.var', 'quali.sup',
+#'   'group' or 'ind' for FAMD, MFA and HMFA.
 #' @param result the result to be extracted for the element. Possible values are
 #'   the combination of c("cos2", "contrib", "coord")
 #' @param group.names a vector containing the name of the groups (by default, 
 #'   NULL and the group are named group.1, group.2 and so on).
 #' @param node.level a single number indicating the HMFA node level.
-#' @param axes a numeric vector specifying the axes of interest. Default values 
+#' @param axes a numeric vector specifying the axes of interest. Values must be
+#'   positive integer indices within the available dimensions. Default values
 #'   are 1:2 for axes 1 and 2.
 #' @param select a selection of variables. Allowed values are NULL or a list 
 #'   containing the arguments name, cos2 or contrib. Default is list(name = 
@@ -80,6 +85,9 @@ NULL
 #' # Summarize individuals on axes 1:2
 #' res <- facto_summarize(res.mca, "ind", axes = 1:2)
 #' head(res)
+#' # Summarize quantitative supplementary variables on axes 1:2
+#' res <- facto_summarize(res.mca, "quanti.sup", axes = 1:2)
+#' head(res)
 #' 
 #' # Multiple factor Analysis
 #' # +++++++++++++++++++++++++++++++++
@@ -88,7 +96,7 @@ NULL
 #' res.mfa <- MFA(poison, group=c(2,2,5,6), type=c("s","n","n","n"),
 #'                name.group=c("desc","desc2","symptom","eat"),
 #'                num.group.sup=1:2, graph=FALSE)
-#' # Summarize categorcial variables on axes 1:2
+#' # Summarize categorical variables on axes 1:2
 #' res <- facto_summarize(res.mfa, "quali.var", axes = 1:2)
 #' head(res)
 #' # Summarize individuals on axes 1:2
@@ -102,11 +110,15 @@ facto_summarize <- function(X, element, node.level = 1, group.names,
   { 
   # check element
   allowed_elmts <- c("row", "col", "var", "ind", "quanti.var", "quali.var",
+                     "quali.sup",
                      "mca.cor", "quanti.sup",  "group", "partial.axes", "partial.node")
   if(!element %in% allowed_elmts) stop("Can't handle element = '", element, "'") 
   if(element %in% c("mca.cor", "quanti.sup")) {
     if(!inherits(X, "MCA")) stop("element = 'mca_cor' is supported only for FactoMineR::MCA().")
     result <- NULL
+  }
+  if(element == "quali.sup") {
+    result <- intersect(result, c("coord", "cos2"))
   }
   
   # Check and get the classe of X
@@ -127,10 +139,7 @@ facto_summarize <- function(X, element, node.level = 1, group.names,
     ndim <- ncol(elmt[[1]])
   else
     ndim <- ncol(elmt$coord)
-  if(max(axes) > ndim)
-    stop("The value of the argument axes is incorrect. ",
-         "The number of axes in the data is: ", ncol(elmt$coord), 
-         ". Please try again with axes between 1 - ", ncol(elmt$coord))
+  axes <- .validate_axis_indices(axes, ndim = ndim)
   
   # Summarize the result
   res = NULL
@@ -230,6 +239,10 @@ facto_summarize <- function(X, element, node.level = 1, group.names,
     name <- rownames(elmt$coord)
     if(is.null(name)) name <- as.character(seq_len(nrow(elmt$coord)))
     name <- as.character(name)
+    # Disambiguate duplicated category names (e.g. FAMD/MFA qualitative
+    # variables sharing factor-level names) so they can be used as row names
+    # (#184, #140). No-op when names are already unique.
+    name <- .disambiguate_category_names(X, name, element, facto_class)
     res <- cbind.data.frame(name = name, res)
     rownames(res) <- name
     if(!is.null(select) && !is.null(select$name) && .factominer_needs_category_map(facto_class, element)){

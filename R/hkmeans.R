@@ -63,7 +63,7 @@
 #' 
 #' 
 #' # Visualize the hkmeans final clusters
-#' fviz_cluster(res.hk, frame.type = "norm", frame.level = 0.68)
+#' fviz_cluster(res.hk, ellipse.type = "norm", ellipse.level = 0.68)
 #' }
 #' @name hkmeans
 #' @rdname hkmeans
@@ -76,6 +76,9 @@ hkmeans <- function(x, k, hc.metric = "euclidean", hc.method = "ward.D2",
     stop("x must have at least 2 rows and 1 column")
   if(!is.numeric(k) || length(k) != 1L || is.na(k) || k %% 1 != 0 || k < 2)
     stop("k must be a single integer >= 2")
+  # NOTE: do NOT pre-empt k > n here. stats::cutree() below errors natively
+  # ("elements of 'k' must be between 1 and N"); a custom early error broke the
+  # chooseGCM reverse dependency on CRAN (mirrors the hcut() fix).
   res.hc <- stats::hclust(stats::dist(x, method = hc.metric), method = hc.method)
   grp <- stats::cutree(res.hc, k = k)
   clus.centers <- stats::aggregate(x, list(grp), mean)[, -1]
@@ -125,4 +128,3 @@ hkmeans_tree <- function(hkmeans, rect.col = NULL, ...)
   k <- length(unique(res.hk$cluster))
   stats::rect.hclust(res.hk$hclust, k = k, border = rect.col)
 }
-

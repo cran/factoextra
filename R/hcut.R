@@ -2,9 +2,12 @@
 NULL
 #' Computes Hierarchical Clustering and Cut the Tree
 #' 
-#' @description 
-#' Computes hierarchical clustering (hclust, agnes, diana) and cut the tree into k clusters. It also accepts 
-#' correlation based distance measure methods such as "pearson", "spearman" and "kendall".
+#' @description
+#' Computes hierarchical clustering (hclust, agnes, diana) and cuts the tree
+#' into \code{k} clusters. It also accepts correlation-based distance measures
+#' such as "pearson", "spearman" and "kendall". Direct calls require
+#' \code{k >= 2}; helper-level one-cluster handling is implemented in callers
+#' such as \code{eclust()} and \code{fviz_nbclust()}.
 #' @param x a numeric matrix, numeric data frame or a dissimilarity matrix.
 #' @param k a single integer specifying the number of clusters to be generated.
 #'   Must be at least 2 and smaller than the number of observations.
@@ -14,11 +17,13 @@ NULL
 #' dissimilarities between observations. Allowed values are those accepted by the function dist() [including "euclidean", "manhattan", "maximum",
 #'  "canberra", "binary", "minkowski"] and correlation based distance measures ["pearson", "spearman" or "kendall"].
 #' @param stand logical value; default is FALSE. If TRUE, then the data will be standardized using the function scale(). 
-#' Measurements are standardized for each variable (column), by subtracting the variable's mean value and 
-#' dividing by the variable's standard deviation.
+#' Measurements are standardized for each variable (column), by subtracting the
+#' variable's mean value and dividing by the variable's standard deviation. If
+#' scaling produces \code{NA} values, \code{hcut()} stops with a package-level
+#' error.
 #' @param isdiss logical value specifying whether \code{x} is already a
 #'   dissimilarity matrix. If TRUE, \code{x} must inherit from class
-#'   \code{"dist"}.
+#'   \code{"dist"} and contain only finite values.
 #' @param hc_func the hierarchical clustering function to be used. Default value is "hclust". Possible values 
 #' is one of "hclust", "agnes", "diana". Abbreviation is allowed.
 #' @param graph logical value. If TRUE, the dendrogram is displayed.
@@ -28,9 +33,10 @@ NULL
 #'       
 #' It includes also:
 #' \itemize{
-#' \item cluster: the cluster assignement of observations after cutting the tree
+#' \item cluster: the cluster assignment of observations after cutting the tree
 #' \item nbclust: the number of clusters
-#' \item silinfo: the silhouette information of observations (if k > 1)
+#' \item silinfo: the silhouette information of observations (available when
+#'   \code{k > 1})
 #' \item size: the size of clusters
 #' \item data: a matrix containing the original or  the standardized data (if stand = TRUE)
 #' }
@@ -43,7 +49,7 @@ NULL
 #' # Compute hierarchical clustering and cut into 4 clusters
 #' res <- hcut(USArrests, k = 4, stand = TRUE)
 #' 
-#' # Cluster assignements of observations
+#' # Cluster assignments of observations
 #' res$cluster
 #' # Size of clusters
 #' res$size
@@ -68,8 +74,15 @@ hcut <- function(x, k = 2, isdiss = inherits(x, "dist"),
     stop("The data must be of class matrix, data.frame, or dist")
   if(!is.numeric(k) || length(k) != 1L || is.na(k) || k %% 1 != 0 || k < 2)
     stop("k must be a single integer >= 2")
+  # NOTE: do NOT pre-empt k > n_obs with a custom stop() here. stats::cutree()
+  # below already errors ("elements of 'k' must be between 1 and N") for k > n,
+  # and the reverse dependency chooseGCM pins that exact native message. A custom
+  # early error broke chooseGCM on CRAN (factoextra 2.0.0/2.1.0). Keep the native
+  # error. See tests/testthat/test-regressions.R (chooseGCM revdep guard).
   if(isdiss && !inherits(x, "dist"))
     stop("When isdiss = TRUE, x must be an object of class dist")
+  if(isdiss)
+    .check_dist_finite(x)
   if(stand && !inherits(x, "dist")) {
     x <- scale(x)
     if(anyNA(x))

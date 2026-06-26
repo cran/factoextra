@@ -52,6 +52,12 @@ NULL
   out
 }
 
+.get_factominer_quali_sup <- function(X){
+  if(!is.null(X$quali.var.sup)) return(X$quali.var.sup)
+  if(!is.null(X$quali.sup)) return(X$quali.sup)
+  NULL
+}
+
 .with_preserved_seed <- function(seed, expr){
   has_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
   if(has_seed) old_seed <- get(".Random.seed", envir = .GlobalEnv)
@@ -66,6 +72,19 @@ NULL
   force(expr)
 }
 
+.coerce_integerish <- function(value, arg, lower = 1L, upper = .Machine$integer.max,
+                               value_label = "single positive integer value"){
+  tol <- sqrt(.Machine$double.eps)
+  if(!is.numeric(value) || length(value) != 1L || is.na(value) || !is.finite(value))
+    stop(arg, " must be a ", value_label, " in [", lower, ", ", upper, "].")
+
+  rounded <- round(value)
+  if(abs(value - rounded) > tol || rounded < lower || rounded > upper)
+    stop(arg, " must be a ", value_label, " in [", lower, ", ", upper, "].")
+
+  as.integer(rounded)
+}
+
 # Check and get the class of the output of a factor analysis
 # ++++++++++++++++++++++++++++
 # X: an output of factor analysis (PCA, CA, MCA, MFA) 
@@ -74,7 +93,14 @@ NULL
   
   if(inherits(X, c('PCA', 'princomp', 'prcomp')))
     facto_class ="PCA"
+  # User-supplied coordinates wrapped by as_factoextra_pca().
+  else if(inherits(X, "factoextra_pca"))
+    facto_class ="PCA"
   else if(inherits(X, "pca") && inherits(X, "dudi"))
+    facto_class ="PCA"
+  # ade4 between-class / within-class PCA (bca/wca): treated as a PCA. These
+  # objects are class c("between"/"within", "dudi") and drop the "pca" class.
+  else if(inherits(X, c("between", "within")) && inherits(X, "dudi"))
     facto_class ="PCA"
   else if(inherits(X, c("CA", "ca", "coa", "correspondence"))) facto_class="CA"
   else if(inherits(X, c("MCA", "acm"))) facto_class = "MCA"
@@ -105,6 +131,8 @@ NULL
   
   if(inherits(X, "MFA") && element == "group")
     elmt <- .get_mfa_group_sup(X)
+  else if(element == "quali.sup")
+    elmt <- .get_factominer_quali_sup(X)
   else if(inherits(X, c("CA", "PCA", "MCA", "MFA", "HMFA", "FAMD"))) {
     elmt <- .extract_nested_element(X, element)
   }
@@ -511,7 +539,7 @@ NULL
   else if(element=="quanti.var")
     title <- paste0(varname, " of quantitive variables to Dim-", paste(axes, collapse="-"))
   else if(element=="quali.var")
-    title <- paste0(varname, " of qualitive variables to Dim-", paste(axes, collapse="-"))
+    title <- paste0(varname, " of qualitative variables to Dim-", paste(axes, collapse="-"))
   else if(element=="group")
     title <- paste0(varname, " of groups to Dim-", paste(axes, collapse="-"))
   else if(element=="partial.axes")
@@ -661,8 +689,23 @@ NULL
     geom_hline(yintercept = 0, color = "black", linetype=linetype) +
     geom_vline(xintercept = 0, color = "black", linetype=linetype) +
     labs(title = title, x = xlab, y = ylab)
-  
+
+  p <- .hide_text_legend(p)
+
   return(p)
+}
+
+# Stop text/label layers from injecting a stray glyph (e.g. "a") into the
+# colour/fill legend (#14). Labels are still drawn on the plot; they are only
+# removed from the legend keys. The colour/shape guides come from the point
+# layers, so this never drops a legend that should exist.
+.hide_text_legend <- function(p){
+  text_geoms <- c("GeomText", "GeomTextRepel", "GeomLabel", "GeomLabelRepel")
+  for(i in seq_along(p$layers)){
+    if(inherits(p$layers[[i]]$geom, text_geoms))
+      p$layers[[i]]$show.legend <- FALSE
+  }
+  p
 }
 
 # Check the element to be labelled
@@ -671,6 +714,22 @@ NULL
 # possible values are "all", "none" or the combination of 
 # c("row", "row.sup", "col", "col.sup", "ind", "ind.sup", "quali", "var", "quanti.sup")
 ## Returns a list 
+# Warn when a label/invisible vector contains tokens that are not recognized, so
+# a typo such as label = "id" (instead of "ind") no longer silently draws nothing
+# but tells the user which values are valid. Only warns for genuinely unknown
+# tokens; recognized values keep their exact previous behavior. (#165)
+.warn_unknown_elements <- function(values, valid, arg){
+  if(is.null(values)) return(invisible(NULL))
+  unknown <- setdiff(as.character(values), valid)
+  if(length(unknown))
+    warning("Unknown ", arg, " value(s): ",
+            paste0('"', unknown, '"', collapse = ", "),
+            ". Valid values are \"all\", \"none\" or any of: ",
+            paste0('"', setdiff(valid, c("all", "none")), '"', collapse = ", "),
+            ".", call. = FALSE)
+  invisible(NULL)
+}
+
 .label <- function(label){
   lab  <- list()
   element <- c("var", "quanti.sup", "quali.sup", "quanti.sup","quanti", # var - PCA, MCA, MFA
@@ -681,6 +740,7 @@ NULL
                "row", "row.sup", # row - ca
                "col", "col.sup" # col - ca
                )
+  .warn_unknown_elements(label, c("all", "none", element), "label")
   for(el in element){
     if(label[1] == "all" || el %in% label) lab[[el]] <- TRUE
     else lab[[el]] <- FALSE
@@ -705,6 +765,7 @@ NULL
                "row", "row.sup", # row - ca
                "col", "col.sup" # col - ca
   )
+  .warn_unknown_elements(invisible, c("all", "none", element), "invisible")
   for(el in element){
     if(el %in% invisible) hide[[el]] <- TRUE
     else hide[[el]] <- FALSE
@@ -755,9 +816,25 @@ NULL
   return_val
 }
 
+# Check axis values
+.validate_axis_indices <- function(axes, ndim = NULL){
+  if(!is.numeric(axes) || length(axes) == 0L || anyNA(axes) || any(!is.finite(axes)) ||
+     any(axes %% 1 != 0) || any(axes < 1))
+    stop("The value of the argument axes is incorrect. axes should contain positive integers.")
+
+  axes <- as.integer(axes)
+  if(!is.null(ndim) && max(axes) > ndim)
+    stop("The value of the argument axes is incorrect. ",
+         "The number of axes in the data is: ", ndim,
+         ". Please try again with axes between 1 - ", ndim)
+
+  axes
+}
+
 # Check axis lengths
 .check_axes <- function(axes, .length){
-  if(length(axes) != .length) stop("axes should be of length ", 2)
+  axes <- .validate_axis_indices(axes)
+  if(length(axes) != .length) stop("axes should be of length ", .length)
 }
 
 # Add individual groups column
@@ -1001,7 +1078,7 @@ factominer_category_map <- function(X, element = c("quali.var", "quali.sup", "va
     if(!is.null(X$quali.var)) elmt <- X$quali.var
     else if(inherits(X, "MCA")) elmt <- X$var
   } else if(element == "quali.sup"){
-    elmt <- X$quali.sup
+    elmt <- .get_factominer_quali_sup(X)
   }
 
   if(is.null(elmt) || is.null(elmt$coord)){
@@ -1071,6 +1148,42 @@ factominer_category_map <- function(X, element = c("quali.var", "quali.sup", "va
   map
 }
 
+# Disambiguate duplicated category names (e.g. FAMD/MFA qualitative variables
+# that share factor-level names such as "Low"/"High"). FactoMineR returns the
+# raw level names as row names, which are not necessarily unique across
+# variables; setting them as data.frame row names then errors with
+# "duplicate 'row.names' are not allowed" (see issues #184, #140).
+#
+# When duplicates exist, colliding categories are relabelled as
+# "variable_level" (only the levels actually involved in a collision are
+# prefixed; unique levels keep their plain label). If the original data or the
+# variable mapping is unavailable, falls back to make.unique() so the call
+# never crashes. When there are no duplicates this is a no-op and the names are
+# returned unchanged.
+.disambiguate_category_names <- function(X, name, element, facto_class){
+  if(length(name) == 0 || !any(duplicated(name))) return(name)
+  if(!is.null(facto_class) && facto_class %in% c("FAMD", "MFA", "MCA", "HMFA") &&
+     element %in% c("quali.var", "quali.sup")){
+    data <- tryCatch(as.data.frame(X$call$X), error = function(e) NULL)
+    if(!is.null(data)){
+      is.quali <- which(!vapply(data, is.numeric, logical(1)))
+      if(length(is.quali) > 0){
+        data.quali <- droplevels(as.data.frame(lapply(data[, is.quali, drop = FALSE], as.factor)))
+        level.pos <- unlist(lapply(data.quali, levels), use.names = FALSE)
+        var.pos   <- rep(names(data.quali), vapply(data.quali, nlevels, integer(1)))
+        # Only trust the positional variable mapping when it lines up exactly
+        # with the supplied names (same length and order).
+        if(length(level.pos) == length(name) && all(level.pos == name)){
+          dup.level <- level.pos %in% level.pos[duplicated(level.pos)]
+          new <- ifelse(dup.level, paste(var.pos, level.pos, sep = "_"), level.pos)
+          if(!any(duplicated(new))) return(new)
+        }
+      }
+    }
+  }
+  make.unique(name)
+}
+
 #' Map legacy FactoMineR category names to current labels
 #'
 #' @param X a FactoMineR object (MCA, MFA, FAMD, HMFA).
@@ -1086,7 +1199,7 @@ factominer_category_map <- function(X, element = c("quali.var", "quali.sup", "va
 #'   data(poison)
 #'   res.mca <- FactoMineR::MCA(poison, quanti.sup = 1:2, quali.sup = 3:4, graph = FALSE)
 #'   map <- factominer_category_map(res.mca, element = "var")
-#'   map_factominer_legacy_names(res.mca, map$legacy_underscore[1:3], element = "var")
+#'   map_factominer_legacy_names(res.mca, map$legacy_underscore[1:3], element = "var", quiet = TRUE)
 #' }
 #' }
 #' @export
@@ -1146,7 +1259,7 @@ map_factominer_legacy_names <- function(X, names, element = c("quali.var", "qual
 }
 
 
-# Principal component methods with Fcatominer
+# Principal component methods with FactoMineR
 f_pca <- function(X, graph = FALSE){
   FactoMineR::PCA(X, graph = FALSE)
 }

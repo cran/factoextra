@@ -2,7 +2,7 @@
 % Please edit documentation in R/fviz.R
 \name{fviz}
 \alias{fviz}
-\title{Visualizing Multivariate Analyse Outputs}
+\title{Visualizing Multivariate Analysis Outputs}
 \usage{
 fviz(
   X,
@@ -15,6 +15,7 @@ fviz(
   pointsize = 1.5,
   pointshape = 19,
   arrowsize = 0.5,
+  arrow.linetype = "solid",
   habillage = "none",
   addEllipses = FALSE,
   ellipse.level = 0.95,
@@ -33,6 +34,8 @@ fviz(
   repel = FALSE,
   col.circle = "grey70",
   circlesize = 0.5,
+  add.circle = NULL,
+  rotate.labels = FALSE,
   ggtheme = theme_minimal(),
   ggp = NULL,
   font.family = "",
@@ -43,11 +46,13 @@ fviz(
 \item{X}{an object of class PCA, CA, MCA, FAMD, MFA and HMFA [FactoMineR]; prcomp
 and princomp [stats]; dudi, pca, coa and acm [ade4]; ca [ca package]; expoOutput [ExPosition].}
 
-\item{element}{the element to subset from the output. Possible values are 
-"row" or "col" for CA; "var" or "ind" for PCA and MCA; "mca.cor" for MCA; 
-'quanti.var', 'quali.var' , 'group' or 'ind' for FAMD, MFA and HMFA.}
+\item{element}{the element to subset from the output. Possible values are
+"row" or "col" for CA; "var", "ind", "mca.cor" or "quanti.sup" for MCA;
+"var" or "ind" for PCA; and 'quanti.var', 'quali.var', 'quali.sup',
+'group' or 'ind' for FAMD, MFA and HMFA.}
 
-\item{axes}{a numeric vector specifying the axes of interest. Default values 
+\item{axes}{a numeric vector specifying the axes of interest. Values must be
+positive integer indices within the available dimensions. Default values
 are 1:2 for axes 1 and 2.}
 
 \item{geom}{a text specifying the geometry to be used for the graph. Default 
@@ -73,6 +78,9 @@ Default value is "none". Allowed values are the combination of c("ind",
 \item{pointshape}{the shape of points}
 
 \item{arrowsize}{the size of arrows. Controls the thickness of arrows.}
+
+\item{arrow.linetype}{linetype of the variable arrows (e.g. "solid",
+"dashed", "dotted"). Default is "solid".}
 
 \item{habillage}{an optional factor variable for coloring the observations by 
 groups. Default value is "none". If X is a PCA object from FactoMineR 
@@ -153,6 +161,20 @@ PCA output.}
 
 \item{circlesize}{the size of the variable correlation circle.}
 
+\item{add.circle}{logical or NULL controlling the variable correlation circle.
+Default NULL shows it only when meaningful: for PCA variables on
+unit-variance (scaled) data, and for quantitative variables of
+MCA/MFA/HMFA/FAMD. Use \code{add.circle = TRUE} to force the circle (e.g. a
+\code{prcomp(scale = FALSE)} fit on data you scaled manually) or
+\code{add.circle = FALSE} to suppress it.}
+
+\item{rotate.labels}{logical. If \code{TRUE}, the text labels of the plotted
+element are rotated to the angle of their arrows (ggbiplot style); labels in
+the left half-plane are flipped to stay upright. Default is \code{FALSE}
+(no rotation). Use together with \code{repel = FALSE}, as ggrepel ignores the
+label angle. Most useful for variable plots/biplots (e.g.
+\code{fviz_pca_var}, \code{fviz_pca_biplot}).}
+
 \item{ggtheme}{function, ggplot2 theme name. Default value is theme_pubr().
 Allowed values include ggplot2 official themes: theme_gray(), theme_bw(),
 theme_minimal(), theme_classic(), theme_void(), ....}
@@ -168,7 +190,7 @@ ggpubr::ggpar().}
 a ggplot
 }
 \description{
-Generic function to create a scatter plot of multivariate analyse
+Generic function to create a scatter plot of multivariate analysis
  outputs, including PCA, CA, MCA and MFA.
 }
 \examples{

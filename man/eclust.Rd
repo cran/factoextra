@@ -6,7 +6,8 @@
 \usage{
 eclust(
   x,
-  FUNcluster = c("kmeans", "pam", "clara", "fanny", "hclust", "agnes", "diana"),
+  FUNcluster = c("kmeans", "pam", "clara", "fanny", "hclust", "agnes", "diana",
+    "hkmeans"),
   k = NULL,
   k.max = 10,
   stand = FALSE,
@@ -21,23 +22,31 @@ eclust(
 )
 }
 \arguments{
-\item{x}{numeric vector, data matrix or data frame}
+\item{x}{numeric vector, data matrix or data frame. For hierarchical
+clustering (\code{FUNcluster} = "hclust", "agnes" or "diana"), a
+precomputed dissimilarity matrix (an object of class \code{"dist"}) may be
+supplied directly; in that case \code{hc_metric} is ignored and \code{k}
+must be specified. This allows custom distances such as Bray-Curtis
+(e.g. \code{vegan::vegdist(df, "bray")}).}
 
-\item{FUNcluster}{a clustering function including "kmeans", "pam", "clara", 
-"fanny", "hclust", "agnes" and "diana". Abbreviation is allowed.}
+\item{FUNcluster}{a clustering function including "kmeans", "pam", "clara",
+"fanny", "hkmeans", "hclust", "agnes" and "diana". Abbreviation is allowed.}
 
-\item{k}{the number of clusters to be generated. If NULL, the gap statistic 
-is used to estimate the appropriate number of clusters. In the case of 
-kmeans, k can be either the number of clusters, or a set of initial 
-(distinct) cluster centers.}
+\item{k}{the number of clusters to be generated. If NULL, the gap statistic
+is used to estimate the appropriate number of clusters. For hierarchical
+clustering, this automatic selection may return \code{k = 1}. In the case
+of kmeans, \code{k} can be either the number of clusters, or a set of
+initial (distinct) cluster centers.}
 
 \item{k.max}{the maximum number of clusters to consider, must be at least 
 two.}
 
-\item{stand}{logical value; default is FALSE. If TRUE, then the data will be 
-standardized using the function scale(). Measurements are standardized for 
-each variable (column), by subtracting the variable's mean value and 
-dividing by the variable's standard deviation.}
+\item{stand}{logical value; default is FALSE. If TRUE, then the data will be
+standardized using the function \code{scale()}. Measurements are
+standardized for each variable (column), by subtracting the variable's
+mean value and dividing by the variable's standard deviation. If scaling
+produces \code{NA} values, \code{eclust()} stops with a package-level
+error.}
 
 \item{graph}{logical value. If TRUE, cluster plot is displayed.}
 
@@ -45,9 +54,9 @@ dividing by the variable's standard deviation.}
 calculating dissimilarities between observations. Allowed values are those 
 accepted by the function dist() [including "euclidean", "manhattan", 
 "maximum", "canberra", "binary", "minkowski"] and correlation based 
-distance measures ["pearson", "spearman" or "kendall"]. Used only when 
-FUNcluster is a hierarchical clustering function such as one of "hclust", 
-"agnes" or "diana".}
+distance measures ["pearson", "spearman" or "kendall"]. Used only when
+FUNcluster is a hierarchical clustering function such as one of "hclust",
+"agnes" or "diana". Ignored when \code{x} is already a \code{"dist"} object.}
 
 \item{hc_method}{the agglomeration method to be used (?hclust): "ward.D", 
 "ward.D2", "single", "complete", "average", ...}
@@ -69,19 +78,22 @@ for determining the number of clusters using gap statistic.}
 Returns an object of class "eclust" containing the result of the 
   standard function used (e.g., kmeans, pam, hclust, agnes, diana, etc.).
   
-  It includes also: \itemize{ \item cluster: the cluster assignement of 
-  observations after cutting the tree \item nbclust: the number of clusters 
-  \item silinfo: the silhouette information of observations, including 
-  $widths (silhouette width values of each observation), $clus.avg.widths 
-  (average silhouette width of each cluster) and $avg.width (average width of
-  all clusters) \item size: the size of clusters \item data: a matrix 
-  containing the original or the standardized data (if stand = TRUE) } The 
-  "eclust" class has method for fviz_silhouette(), fviz_dend(), 
-  fviz_cluster().
+  It also includes: \itemize{ \item cluster: the cluster assignment of
+  observations after cutting the tree \item nbclust: the number of clusters
+  \item silinfo: the silhouette information of observations, when available
+  for solutions with at least two clusters, including $widths (silhouette
+  width values of each observation), $clus.avg.widths (average silhouette
+  width of each cluster) and $avg.width (average width of all clusters)
+  \item size: the size of clusters \item data: a matrix containing the
+  original or the standardized data (if stand = TRUE) } The "eclust" class
+  has method for fviz_silhouette(), fviz_dend(), fviz_cluster().
 }
 \description{
-Provides solution for enhancing the workflow of clustering
-  analyses and ggplot2-based elegant data visualization. Read more: 
+Provides a convenient workflow for clustering analyses and
+  ggplot2-based data visualization. When \code{k = NULL}, the gap statistic
+  selects the number of clusters. Hierarchical backends may validly return
+  \code{k = 1}; in that case \code{eclust()} returns a one-cluster result
+  without silhouette information. Read more:
  \href{https://www.datanovia.com/en/blog/cluster-analysis-in-r-simplified-and-enhanced/}{Visual enhancement of clustering analysis}.
 }
 \examples{
@@ -100,10 +112,10 @@ res.km$nbclust
  res.km
  
 \dontrun{
- # Enhanced hierarchical clustering
- res.hc <- eclust(df, "hclust", nboot = 2) # compute hclust
-  fviz_dend(res.hc) # dendrogam
-  fviz_silhouette(res.hc) # silhouette plot
+# Enhanced hierarchical clustering
+res.hc <- eclust(df, "hclust", nboot = 2) # compute hclust
+fviz_dend(res.hc) # dendrogram
+if (res.hc$nbclust > 1) fviz_silhouette(res.hc) # silhouette plot
 }
  
 }

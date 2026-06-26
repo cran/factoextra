@@ -6,7 +6,8 @@
 #'  package]; dbscan [fpc package]; Mclust [mclust package]; HCPC [FactoMineR];
 #'  hkmeans [factoextra]. Observations are represented by points in the plot,
 #'  using principal components if ncol(data) > 2. An ellipse is drawn around
-#'  each cluster.
+#'  each cluster. When \code{stand = TRUE}, the plotting data must remain
+#'  finite after scaling.
 #'@param object an object of class "partition" created by the functions pam(),
 #'  clara() or fanny() in cluster package; "kmeans" [in stats package]; "dbscan"
 #'  [in fpc package]; "Mclust" [in mclust]; "hkmeans", "eclust" [in factoextra].
@@ -17,7 +18,8 @@
 #'@param choose.vars a character vector containing variables to be considered
 #'  for plotting.
 #'@param stand logical value; if TRUE, data is standardized before principal
-#'  component analysis
+#'  component analysis. If scaling produces \code{NA} values,
+#'  \code{fviz_cluster()} stops with a package-level error.
 #'@param axes a numeric vector of length 2 specifying the dimensions to be
 #'  plotted.
 #'@param geom a text specifying the geometry to be used for the graph. Allowed
@@ -52,7 +54,7 @@
 #'@param ... other arguments to be passed to the functions
 #'  \code{\link[ggpubr]{ggscatter}} and \code{\link[ggpubr]{ggpar}}.
 #'
-#'@return return a ggpplot.
+#'@return a ggplot2 object.
 #'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
 #'@seealso \code{\link{fviz_silhouette}}, \code{\link{hcut}},
 #'  \code{\link{hkmeans}},  \code{\link{eclust}}, \code{\link{fviz_dend}}
@@ -166,7 +168,31 @@ fviz_cluster <- function(object, data = NULL, choose.vars = NULL, stand = TRUE,
   
   
   # object from cluster package
-  if(inherits(object, c("partition", "hkmeans", "eclust"))) data <- object$data
+  if(inherits(object, c("partition", "hkmeans", "eclust"))){
+    # Use the object's own data when present; otherwise keep the user-supplied
+    # `data=`. pam()/fanny() fitted on a dissimilarity matrix store no
+    # coordinates (object$data is NULL), so the original data is needed for the
+    # 2-D layout; the cluster assignments still come from the object (#128).
+    if(!is.null(object$data)) data <- object$data
+    else if(!is.null(data)){
+      # Align the object's clustering to the supplied data's rows by name, so
+      # points are not silently mis-coloured if `data` is ordered differently
+      # from the dissimilarity. Error on a genuine set mismatch.
+      cl <- object$clustering
+      if(!is.null(cl) && !is.null(names(cl)) && !is.null(rownames(data))){
+        if(!setequal(names(cl), rownames(data)))
+          stop("The row names of `data` do not match the observations used to ",
+               "build the clustering. Pass the same data used for the ",
+               "dissimilarity matrix.", call. = FALSE)
+        object$clustering <- cl[rownames(data)]
+      }
+    }
+    if(is.null(data))
+      stop("This clustering has no stored data (e.g. pam()/fanny() on a ",
+           "dissimilarity matrix). Supply the original data via 'data=' - it is ",
+           "used only for the 2-D layout; the cluster assignments come from the object.",
+           call. = FALSE)
+  }
   # Object from kmeans (stats package)
   else if((inherits(object, "kmeans") && !inherits(object, "eclust")) || inherits(object, "dbscan")){
     if(is.null(data)) stop("data is required for plotting kmeans/dbscan clusters")
@@ -200,7 +226,11 @@ fviz_cluster <- function(object, data = NULL, choose.vars = NULL, stand = TRUE,
   # Choose variables
   if(!is.null(choose.vars))
     data <- data[, choose.vars, drop = FALSE]
-  if(stand) data <- scale(data)
+  if(stand) {
+    data <- scale(data)
+    if(anyNA(data))
+      stop("Scaling produced NA values. Check for constant columns or non-finite values.")
+  }
   cluster <- as.factor(object$cluster)
   
   pca_performed <- FALSE
@@ -307,6 +337,9 @@ fviz_cluster <- function(object, data = NULL, choose.vars = NULL, stand = TRUE,
     p <- .add_outliers(p, outliers_data, outliers_labs, outlier.color, outlier.shape,
                   outlier.pointsize, outlier.labelsize/3, geom, repel = repel)
 
+  # Keep the point labels out of the legend (no stray "a" glyph); the cluster
+  # colour/shape legend comes from the point layer. Mirrors .fviz_finish() (#14).
+  p <- .hide_text_legend(p)
   p
 }
 
@@ -334,6 +367,6 @@ fviz_cluster <- function(object, data = NULL, choose.vars = NULL, stand = TRUE,
                          aes(x = .data[["x"]], y = .data[["y"]], label = .data[["name"]]),
                          size = labelsize, vjust = -0.7, color = outlier.color)
   }
-    
+
   return(p)
 }
