@@ -72,6 +72,97 @@ NULL
   force(expr)
 }
 
+.cluster_assignments <- function(object){
+  cluster <- object[["cluster"]]
+  if(is.null(cluster)) cluster <- object[["clustering"]]
+  if(is.null(cluster))
+    stop("The clustering object has no `cluster` or `clustering` assignments.",
+         call. = FALSE)
+  cluster
+}
+
+.align_cluster_assignments <- function(cluster, observation_names, n_obs){
+  if(length(cluster) != n_obs)
+    stop("Cluster assignments and plotted observations do not match in length (",
+         length(cluster), " versus ", n_obs, ").",
+         call. = FALSE)
+
+  cluster_names <- names(cluster)
+  # Reorder the clustering to the data's row order ONLY when both sides carry
+  # complete, unique, matching names. Otherwise keep the positional order (the
+  # historical behaviour), so a clustering whose names do not line up with `data`
+  # still plots positionally instead of erroring. This fixes the reordering
+  # mis-colouring (#128) when names match, without regressing inputs that used to
+  # plot.
+  aligns_by_name <-
+    !is.null(cluster_names) && any(nzchar(cluster_names)) &&
+    length(cluster_names) == n_obs && !anyNA(cluster_names) &&
+    all(nzchar(cluster_names)) &&
+    !is.null(observation_names) && length(observation_names) == n_obs &&
+    !anyNA(observation_names) && all(nzchar(observation_names)) &&
+    !anyDuplicated(cluster_names) && !anyDuplicated(observation_names) &&
+    setequal(cluster_names, observation_names)
+  if(aligns_by_name) cluster <- cluster[observation_names]
+  cluster
+}
+
+# Pick row indices for a downsampled plot (used by max.points).
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# n          : total number of rows
+# max.points : draw at most this many; if n <= max.points, keep all rows
+# groups     : optional grouping (habillage / cluster). When present, sampling is
+#              STRATIFIED with a per-group floor so a small group is not decimated
+#              (a group reduced to a few points would give a misleading ellipse).
+#              Every group keeps at least min(group size, floor) points, and the
+#              remaining budget is spread proportionally to the larger groups.
+# seed       : fixed seed for a reproducible subset; RNG-safe via .with_preserved_seed.
+.sample_indices <- function(n, max.points, groups = NULL, seed = 123, min.per.group = 20L){
+  if(n <= max.points) return(seq_len(n))
+  .with_preserved_seed(seed, {
+    stratify <- !is.null(groups) && length(unique(groups)) >= 2
+    if(!stratify){
+      sort(sample.int(n, max.points))
+    } else {
+      # Coerce to character so NA-group rows stay eligible (folded into an explicit
+      # stratum) and empty/unused factor levels drop out on their own - a leftover
+      # level must not shrink the per-group floor.
+      g <- as.character(groups)
+      g[is.na(g)] <- ".__NA__."
+      idx <- split(seq_len(n), g)
+      sizes <- lengths(idx)
+      ng <- length(idx)
+      # cap the floor so the guaranteed minimums never exceed the total budget
+      eff_floor <- min(min.per.group, max.points %/% ng)
+      keep <- pmin(sizes, eff_floor)
+      remaining <- max(max.points - sum(keep), 0L)
+      leftover <- pmax(sizes - keep, 0L)
+      # Spread the remaining budget proportionally to the larger groups, then hand
+      # out the rounding shortfall by largest fractional remainder (Hamilton
+      # apportionment) so the total lands on max.points exactly. Each group is
+      # capped at its leftover, and total leftover always covers `remaining`
+      # (n >= max.points), so the shortfall is always placeable.
+      extra <- rep(0L, ng)
+      if(remaining > 0 && sum(leftover) > 0){
+        quota <- remaining * leftover / sum(leftover)
+        extra <- pmin(as.integer(quota), leftover)
+        short <- remaining - sum(extra)
+        while(short > 0){
+          frac <- quota - extra               # remainder; negative once a +1 lands
+          frac[extra >= leftover] <- -Inf     # group at capacity: skip
+          if(all(!is.finite(frac))) break
+          j <- which.max(frac)
+          extra[j] <- extra[j] + 1L
+          short <- short - 1L
+        }
+      }
+      target <- pmin(keep + extra, sizes)
+      out <- unlist(Map(function(ix, t) if(t >= length(ix)) ix else sample(ix, t),
+                        idx, target), use.names = FALSE)
+      sort(as.integer(out))
+    }
+  })
+}
+
 .coerce_integerish <- function(value, arg, lower = 1L, upper = .Machine$integer.max,
                                value_label = "single positive integer value"){
   tol <- sqrt(.Machine$double.eps)
@@ -175,7 +266,11 @@ NULL
     
     # selection of variables
     if(!is.null(select)){
-      if(!is.null(select$contrib)) res <- NULL # supp points don't have contrib
+      # Supplementary points have no contribution. Under the default AND selection a
+      # contrib condition therefore excludes them all. Under union (OR) they can still
+      # match by name/cos2, so route through .select (which treats the missing contrib
+      # column as matching nothing) instead of dropping them.
+      if(!is.null(select$contrib) && !isTRUE(select$union)) res <- NULL
       else res <- .select(res, select, check = FALSE)
     }
   }
@@ -537,7 +632,7 @@ NULL
   else if(element=="ind")
     title <- paste0(varname, " of individuals to Dim-", paste(axes, collapse="-"))
   else if(element=="quanti.var")
-    title <- paste0(varname, " of quantitive variables to Dim-", paste(axes, collapse="-"))
+    title <- paste0(varname, " of quantitative variables to Dim-", paste(axes, collapse="-"))
   else if(element=="quali.var")
     title <- paste0(varname, " of qualitative variables to Dim-", paste(axes, collapse="-"))
   else if(element=="group")
@@ -556,20 +651,74 @@ NULL
 # - name: is a character vector containing row names of interest
 # - cos2: if cos2 is in [0, 1], ex: 0.6, then rows with a cos2 > 0.6 are extracted.
 #   if cos2 > 1, ex: 5, then the top 5 rows with the highest cos2 are extracted
-# - contrib: if contrib > 1, ex: 5,  then the top 5 rows with the highest cos2 are extracted
+# - contrib: if contrib > 1, ex: 5, then the top 5 rows with the highest contributions are extracted
+# - union: logical. When several of name/cos2/contrib are supplied, FALSE (default) combines
+#   them with AND (each condition narrows the survivors of the previous one - the historical
+#   behavior); TRUE combines them with OR (an element is kept if it matches ANY condition).
+#   union has an effect only when >= 2 conditions are present; with 0 or 1 condition the AND
+#   path below runs unchanged, so a single-condition selection is byte-identical to before.
 # check: if TRUE, check the data after filtering
-.select <- function(d, filter = NULL, check= TRUE){
-  
+.select <- function(d, filter = NULL, check = TRUE, warn_unmatched = FALSE){
+
   if(!is.null(filter)){
-    
+
+    if(warn_unmatched && !is.null(filter$name)){
+      unmatched <- setdiff(filter$name, d$name)
+      if(length(unmatched))
+        warning("Selection name(s) not found: ",
+                paste0('"', unmatched, '"', collapse = ", "), ".",
+                call. = FALSE)
+    }
+
+    # Number of active selection conditions (union is a modifier, not a condition)
+    n_cond <- sum(!is.null(filter$name), !is.null(filter$cos2), !is.null(filter$contrib))
+
+    # -- UNION (OR) mode: only when the user opts in AND >= 2 conditions are present.
+    # Each condition's selected rows are computed independently on the original d, then
+    # unioned (kept in d's original row order). With < 2 conditions this branch is skipped
+    # and the historical AND path runs verbatim.
+    if(isTRUE(filter$union) && n_cond >= 2L){
+      n <- nrow(d)
+      idx <- integer(0)
+      # name: rows whose name is in the requested vector
+      if(!is.null(filter$name))
+        idx <- c(idx, which(d$name %in% filter$name))
+      # cos2: threshold (in [0,1]) or top-N (> 1). A missing cos2 column contributes nothing.
+      if(!is.null(filter$cos2) && "cos2" %in% names(d) && n >= 1){
+        if(0 <= filter$cos2 && filter$cos2 <= 1)
+          idx <- c(idx, which(d$cos2 >= filter$cos2))
+        else if(filter$cos2 > 1){
+          ord <- order(d$cos2, decreasing = TRUE)
+          idx <- c(idx, ord[seq_len(min(filter$cos2, n))])
+        }
+      }
+      # contrib: top-N. A missing contrib column (e.g. supplementary points) contributes nothing.
+      if(!is.null(filter$contrib) && "contrib" %in% names(d) && n >= 1){
+        contrib <- round(filter$contrib)
+        if(contrib < 1) stop("The value of the argument contrib >", 1)
+        ord <- order(d$contrib, decreasing = TRUE)
+        idx <- c(idx, ord[seq_len(min(contrib, n))])
+      }
+      idx <- sort(unique(idx))
+      d <- d[idx, , drop = FALSE]
+      if(check && nrow(d) == 0)
+        stop("There are no observations matching the union (OR) selection. ",
+             "Please, relax the selection and try again.")
+      # Report the (variable-size) union count once, from the user-facing active
+      # selection (check = TRUE); the internal supplementary-point pass (check =
+      # FALSE) reuses the same selection and stays silent to avoid a duplicate.
+      if(check && nrow(d) >= 1)
+        message("Selection (union / OR): ", nrow(d), " element(s) kept.")
+      return(d)
+    }
+
     # Filter by name
     if(!is.null(filter$name)){
       name <- filter$name
       common <- intersect(name, d$name)
-      diff <- setdiff(name, d$name)
       d <- d[common, , drop = FALSE]
     }
-    
+
     # Filter by cos2
     if(!is.null(filter$cos2) && nrow(d) >= 1){
       # case 1 cos2 is in [0, 1]
@@ -577,27 +726,27 @@ NULL
       if(0 <= filter$cos2 && filter$cos2 <= 1){
         d <- d[which(d$cos2 >= filter$cos2), , drop = FALSE]
         if(check && nrow(d)==0)
-          stop("There are no observations with cos2 >=", filter$cos2, 
+          stop("There are no observations with cos2 >=", filter$cos2,
                ". Please, change the value of cos2 and try again.")
       }
-      # case 2 - cos2 > 1 : the top rows are selected 
+      # case 2 - cos2 > 1 : the top rows are selected
       else if(filter$cos2 > 1){
         cos2 <- round(filter$cos2)
         d <- d[order(d$cos2, decreasing = TRUE), , drop = FALSE]
         d <- d[seq_len(min(filter$cos2, nrow(d))),, drop = FALSE]
       }
     }
-    
-    # Filter by contrib: the top rows are selected 
+
+    # Filter by contrib: the top rows are selected
     if(!is.null(filter$contrib) && nrow(d) >= 1){
       contrib <- round(filter$contrib)
       if(contrib < 1) stop("The value of the argument contrib >", 1)
       d <- d[order(d$contrib, decreasing = TRUE), , drop = FALSE]
       d <- d[seq_len(min(contrib, nrow(d))), , drop = FALSE]
     }
-    
+
   }
-  
+
   return (d)
 }
 
@@ -767,7 +916,7 @@ NULL
   )
   .warn_unknown_elements(invisible, c("all", "none", element), "invisible")
   for(el in element){
-    if(el %in% invisible) hide[[el]] <- TRUE
+    if("all" %in% invisible || el %in% invisible) hide[[el]] <- TRUE
     else hide[[el]] <- FALSE
   }
   hide
@@ -820,6 +969,9 @@ NULL
 .validate_axis_indices <- function(axes, ndim = NULL){
   if(!is.numeric(axes) || length(axes) == 0L || anyNA(axes) || any(!is.finite(axes)) ||
      any(axes %% 1 != 0) || any(axes < 1))
+    stop("The value of the argument axes is incorrect. axes should contain positive integers.")
+
+  if(any(axes > .Machine$integer.max))
     stop("The value of the argument axes is incorrect. axes should contain positive integers.")
 
   axes <- as.integer(axes)

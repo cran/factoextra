@@ -7,7 +7,10 @@ NULL
 #' from the results of Principal Component Analysis (PCA),
 #' Correspondence Analysis (CA), Multiple Correspondence Analysis (MCA), Factor Analysis of Mixed Data (FAMD),
 #' and Multiple Factor Analysis (MFA) functions.
-#' @param sort.val a string specifying whether the value should be sorted. 
+#'
+#' Read more: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis}{Principal Component Analysis (PCA) in R: Compute, Visualize & Interpret}.
+#'
+#' @param sort.val a string specifying whether the value should be sorted.
 #' Allowed values are "none" (no sorting), "asc" (for ascending) or "desc" (for descending).
 #' @param ... other arguments to be passed to the function \link[ggpubr]{ggpar}.
 #' @inheritParams fviz_cos2
@@ -21,7 +24,9 @@ NULL
 #'
 #' @return a ggplot2 plot
 #' @author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
-#' @references \url{https://www.sthda.com/english/}
+#' @references \url{https://www.datanovia.com/learn/}
+#' @seealso \code{\link{fviz_cos2}}, \code{\link{get_pca}}.
+#'   Online tutorial: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis}{Principal Component Analysis (PCA) in R: Compute, Visualize & Interpret}.
 #' @examples
 #' \donttest{
 #' # Principal component analysis
@@ -43,6 +48,9 @@ NULL
 #' fviz_contrib(res.pca, choice="var", axes = 2)
 #' # Variable contributions on axes 1 + 2
 #' fviz_contrib(res.pca, choice="var", axes = 1:2)
+#'
+#' # Heat-grid of contributions across several dimensions
+#' fviz_contrib(res.pca, choice = "var", axes = 1:3, display = "heatmap")
 #'
 #' # Contributions of individuals on axis 1
 #' fviz_contrib(res.pca, choice="ind", axes = 1)
@@ -90,15 +98,27 @@ NULL
 #'  }
 #' @export
 fviz_contrib <- function(X, choice = c("row", "col", "var", "ind", "quanti.var", "quali.var", "group", "partial.axes"),
-                         axes=1, fill="steelblue", color = "steelblue", 
+                         axes=1, fill="steelblue", color = "steelblue",
                          sort.val = c("desc", "asc", "none"), top = Inf,
-                         xtickslab.rt = 45, ggtheme = theme_minimal(), ...)
+                         xtickslab.rt = 45, ggtheme = theme_minimal(),
+                         display = c("bar", "heatmap"), ...)
 {
 
   sort.val <- match.arg(sort.val)
   choice = match.arg(choice)
-  
+  display <- match.arg(display)
+
   title <- .build_title(choice[1], "Contribution", axes)
+
+  # display = "heatmap": one tile per (element, dimension) of the per-axis
+  # contribution, instead of a bar of the axis-averaged contribution. The
+  # barplot path (with its reference line) below is unchanged.
+  if(display == "heatmap")
+    return(.fviz_result_heatmap(X, choice = choice[1], result = "contrib",
+                                axes = axes, top = top, fill = fill,
+                                ggtheme = ggtheme,
+                                title = sub(" to Dim-.*$", " per dimension", title),
+                                legend.title = "contrib"))
 
   dd <- facto_summarize(X, element = choice, result = "contrib", axes = axes)
   contrib <- dd$contrib

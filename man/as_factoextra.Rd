@@ -2,9 +2,14 @@
 % Please edit documentation in R/as_factoextra.R
 \name{as_factoextra_pca}
 \alias{as_factoextra_pca}
+\alias{as_factoextra_pca.default}
+\alias{as_factoextra_pca.recipe}
+\alias{as_factoextra_pca.workflow}
 \title{Build a factoextra-ready object from pre-computed coordinates}
 \usage{
-as_factoextra_pca(
+as_factoextra_pca(ind.coord, ...)
+
+\method{as_factoextra_pca}{default}(
   ind.coord,
   var.coord = NULL,
   eig = NULL,
@@ -13,12 +18,23 @@ as_factoextra_pca(
   var.cos2 = NULL,
   var.contrib = NULL,
   var.cor = NULL,
-  scale.unit = FALSE
+  scale.unit = FALSE,
+  ...
 )
+
+\method{as_factoextra_pca}{recipe}(ind.coord, ...)
+
+\method{as_factoextra_pca}{workflow}(ind.coord, ...)
 }
 \arguments{
-\item{ind.coord}{individual (observation) coordinates: a numeric matrix or
-data frame with one column per dimension (the "scores"). Required.}
+\item{ind.coord}{the object to convert. For the default method, individual
+(observation) coordinates: a numeric matrix or data frame with one column per
+dimension (the "scores"). For the \code{recipe} / \code{workflow} methods, a
+prepped \code{recipe} or a fitted \code{workflow} whose PCA is done with
+\code{recipes::step_pca()} (the scores, loadings and eigenvalues are then
+extracted for you). Required.}
+
+\item{...}{passed to methods (unused by the default method).}
 
 \item{var.coord}{optional variable coordinates / loadings: a numeric matrix or
 data frame with one column per dimension. Supplying it enables
@@ -48,14 +64,21 @@ An object of class \code{c("factoextra_pca", "list")} holding the
 variable) coordinates into an object that the \code{\link{fviz_pca}} family
 (\code{fviz_pca_ind()}, \code{fviz_pca_var()}, \code{fviz_pca_biplot()}),
 \code{\link{fviz_eig}}, \code{\link{fviz_contrib}} and \code{\link{fviz_cos2}}
-can plot directly.
+can plot directly. Read more:
+\href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis}{Principal Component Analysis (PCA) in R: Compute, Visualize & Interpret}.
 
-It lets you apply factoextra's visualizations to the output of \emph{any}
-dimension-reduction method - for example \code{stats::cmdscale()},
-\code{ape::pcoa()}, UMAP/t-SNE embeddings, \code{vegan::rda()}/\code{cca()},
-or a custom analysis - without having to write a dedicated backend. You bring
-the coordinates; factoextra draws the biplot, scree plot, contributions and
-cos2.
+It lets you apply factoextra's visualizations to the output of an
+\emph{eigenvalue-based} dimension reduction - for example
+\code{stats::cmdscale()}, \code{ape::pcoa()}, \code{vegan::rda()}/\code{cca()},
+a tidymodels \code{recipe}/\code{workflow} with \code{step_pca()} (see the
+methods below), or a custom analysis - without having to write a dedicated
+backend. You bring the coordinates; factoextra draws the biplot, scree plot,
+contributions and cos2.
+
+The scree plot, contributions and cos2 assume real eigenvalues, so this
+constructor is for PCA-family results. Non-linear embeddings (UMAP, t-SNE) have
+no eigenvalues; plot their coordinates directly (a scree/loadings display would
+be meaningless for them).
 }
 \details{
 When \code{cos2}/\code{contrib} are not supplied they are computed from the
@@ -69,6 +92,41 @@ coordinates:
     dimensions it is the quality restricted to that sub-space. Pass
     \code{ind.cos2}/\code{var.cos2} explicitly if you have the exact values.
 }
+
+\strong{tidymodels (recipe / workflow).} The \code{recipe} and \code{workflow}
+methods extract a PCA fitted with \code{recipes::step_pca()} through the public
+recipes/workflows API: the scores from the baked training data (or, for a fitted
+workflow, \code{workflows::extract_mold()}), the loadings from
+\code{tidy(step, type = "coef")}, and the \emph{full} set of eigenvalues from
+\code{tidy(step, type = "variance")} (so the scree plot and axis percentages are
+honest even when \code{num_comp} keeps only a few components). Variable
+coordinates are loading times the square root of the eigenvalue. Exact
+variable-component correlations and cos2 are recovered from the full PCA
+inertia when every PCA input is provably centered. When those metrics cannot
+be recovered (for example, for a bare \code{step_pca()} with no centering or a
+zero-inertia variable), their entries in \code{get_pca_var()} are \code{NULL}.
+Scores, eigenvalues, variable coordinates and contributions are still returned,
+so the individual, scree, variable-arrow and biplot displays remain available;
+correlation/cos2-dependent displays fail with an explicit unavailable-metric
+error. The correlation circle is omitted and a warning explains how to recover
+the metrics. \code{scale.unit} is set to \code{TRUE} only when every
+PCA input is both centered and unit-scaled at the PCA boundary; partial scaling
+therefore does not draw a correlation circle. For fully normalized data,
+variable coordinates, correlations, cos2 and contributions, and the eigenvalue
+percentages match a full \code{FactoMineR::PCA()} regardless of how many
+components \code{step_pca()} keeps; the \emph{individual} cos2 is computed over
+the retained components (it equals the full-space cos2 only when all components
+are kept). The two-dimensional plots (\code{fviz_pca_ind()},
+\code{fviz_pca_var()}, \code{fviz_pca_biplot()}) need \code{num_comp >= 2}. The
+recipe must be prepped, and its single PCA step must be an unweighted
+\code{step_pca()} and must be the final recipe step. Case-weighted PCA is
+rejected because the adapter cannot yet propagate those weights into individual
+contributions. Later steps could transform the baked/mold PCA
+scores without updating the fitted PCA loadings or eigenvalues, so such recipes
+fail explicitly instead of returning internally inconsistent geometry.
+Non-linear embedding steps such as \code{step_umap()} have no eigenvalues and
+are rejected with a message. For the loadings display of a recipe PCA see also
+\code{learntidymodels::plot_top_loadings()}.
 }
 \examples{
 # 1. Bring your own coordinates: classical MDS (cmdscale) -> factoextra
@@ -82,11 +140,28 @@ fviz_eig(obj)
 pca <- prcomp(iris[, -5], scale. = TRUE)
 obj2 <- as_factoextra_pca(
   ind.coord = pca$x,
-  var.coord = pca$rotation,
-  eig       = pca$sdev^2
+  var.coord = sweep(pca$rotation, 2, pca$sdev, "*"),
+  eig       = pca$sdev^2,
+  scale.unit = TRUE
 )
 fviz_pca_biplot(obj2, label = "var", col.ind = "steelblue")
 
+# 3. A tidymodels recipe PCA (step_pca) -> factoextra biplot + honest scree
+if (requireNamespace("recipes", quietly = TRUE)) {
+  library(recipes)
+  rec <- recipe(~ ., data = iris[, 1:4]) |>
+    step_normalize(all_numeric_predictors()) |>
+    step_pca(all_numeric_predictors(), num_comp = 4)
+  obj3 <- as_factoextra_pca(prep(rec))
+  fviz_pca_biplot(obj3, label = "var")
+  fviz_eig(obj3, addlabels = TRUE)
+}
+
+}
+\seealso{
+For UMAP / t-SNE embeddings, which have no eigenvalues, use
+  \code{\link{fviz_umap}} / \code{\link{fviz_tsne}} instead.
+  Online tutorial: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis}{Principal Component Analysis (PCA) in R: Compute, Visualize & Interpret}.
 }
 \author{
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}

@@ -39,6 +39,8 @@ fviz(
   ggtheme = theme_minimal(),
   ggp = NULL,
   font.family = "",
+  max.points = NULL,
+  sample.seed = 123,
   ...
 )
 }
@@ -61,14 +63,14 @@ value is "auto". Allowed values are the combination of c("point", "arrow",
 c("point", "text") or c("arrow", "text") to show both types.}
 
 \item{label}{a text specifying the elements to be labelled. Default value is 
-"all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
+"all". Allowed values are "all", "none", or a combination of c("ind", "ind.sup",
 "quali", "var", "quanti.sup", "group.sup"). "ind" can be used to label only 
 active individuals. "ind.sup" is for supplementary individuals. "quali" is 
 for supplementary qualitative variables. "var" is for active variables. 
 "quanti.sup" is for quantitative supplementary variables.}
 
 \item{invisible}{a text specifying the elements to be hidden on the plot. 
-Default value is "none". Allowed values are the combination of c("ind", 
+Default value is "none". Allowed values are "all", "none", or a combination of c("ind",
 "ind.sup", "quali", "var", "quanti.sup", "group.sup").}
 
 \item{labelsize}{font size for the labels}
@@ -115,8 +117,8 @@ fill color. Use alpha = 0 for no fill color.}
 added to the plot.}
 
 \item{color}{color to be used for the specified geometries (point, text). Can 
-be a continuous variable or a factor variable. Possible values include also 
-: "cos2", "contrib", "coord", "x" or "y". In this case, the colors for 
+be a continuous variable or a factor variable. Possible values also include
+"cos2", "contrib", "coord", "x", and "y". In this case, the colors for
 individuals/variables are automatically controlled by their qualities of 
 representation ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, 
 "coord"), x values ("x") or y values ("y"). To use automatic coloring (by 
@@ -126,8 +128,8 @@ cos2, contrib, ....), make sure that habillage ="none".}
 Useful when pointshape = 21, for example.}
 
 \item{alpha}{controls the transparency of individual and variable colors, 
-respectively. The value can variate from 0 (total transparency) to 1 (no 
-transparency). Default value is 1. Possible values include also : "cos2", 
+respectively. The value can vary from 0 (total transparency) to 1 (no
+transparency). Default value is 1. Possible values also include "cos2",
 "contrib", "coord", "x" or "y". In this case, the transparency for the 
 individual/variable colors are automatically controlled by their qualities 
 ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, "coord"), x 
@@ -144,16 +146,19 @@ are NULL or a list containing the arguments name, cos2 or contrib: \itemize{
 \item name: is a character vector containing individuals/variables to be 
 drawn \item cos2: if cos2 is in [0, 1], ex: 0.6, then individuals/variables 
 with a cos2 > 0.6 are drawn. if cos2 > 1, ex: 5, then the top 5 
-individuals/variables with the highest cos2 are drawn. \item contrib: if 
-contrib > 1, ex: 5,  then the top 5 individuals/variables with the highest 
-contrib are drawn }}
+individuals/variables with the highest cos2 are drawn. \item contrib: if
+contrib > 1, ex: 5,  then the top 5 individuals/variables with the highest
+contrib are drawn \item union: logical. When several of name/cos2/contrib
+are given, FALSE (default) combines them with AND (each condition further
+narrows the selection); TRUE combines them with OR (an element is kept if it
+matches any condition), e.g. named items \emph{plus} the top-cos2 ones. }}
 
 \item{title}{the title of the graph}
 
 \item{axes.linetype}{linetype of x and y axes.}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
-labels or not. The old \code{jitter} argument is kept for backward
+\item{repel}{logical; whether to use ggrepel to avoid overplotting text
+labels. The old \code{jitter} argument is kept for backward
 compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{col.circle}{a color for the correlation circle. Used only when X is a 
@@ -175,13 +180,36 @@ the left half-plane are flipped to stay upright. Default is \code{FALSE}
 label angle. Most useful for variable plots/biplots (e.g.
 \code{fviz_pca_var}, \code{fviz_pca_biplot}).}
 
-\item{ggtheme}{function, ggplot2 theme name. Default value is theme_pubr().
+\item{ggtheme}{function, ggplot2 theme name. The default is set by each
+function's \code{ggtheme} argument; see the function usage for the actual
+default. Set \code{ggtheme = NULL} to skip applying a ggpubr theme, so the
+plot keeps ggplot2 default theme or the theme set globally via
+\code{theme_set()}.
 Allowed values include ggplot2 official themes: theme_gray(), theme_bw(),
 theme_minimal(), theme_classic(), theme_void(), ....}
 
 \item{ggp}{a ggplot. If not NULL, points are added to an existing plot.}
 
 \item{font.family}{character vector specifying font family.}
+
+\item{max.points}{integer or NULL. When the individual / row / column cloud has
+more than \code{max.points} points, a random subset of that many \emph{points}
+is drawn so the plot stays readable (usable labels instead of an over-plotted
+cloud). Only the drawn points/labels are thinned: any ellipse
+(\code{addEllipses}) and the group mean point are still computed on the
+\strong{full} data, so a convex / confidence frame is not shrunk or inflated by
+the draw. When points are coloured/split by a group (e.g. \code{habillage}),
+the draw is \strong{stratified} so every group keeps at least a minimum number
+of points and none is decimated. When colour, fill or size is mapped to a
+continuous metric (e.g. \code{col.ind = "cos2"}), its scale and legend are
+pinned to the full-data range, so a point's colour, fill and size do not depend
+on how many points are drawn. A message reports how many points are shown. The
+subset is reproducible
+(see \code{sample.seed}) and does not change the caller's random stream.
+\code{NULL} (default) draws every point.}
+
+\item{sample.seed}{the random seed used to pick the \code{max.points} subset,
+for a reproducible figure. Ignored when \code{max.points} is \code{NULL}.}
 
 \item{...}{Arguments to be passed to the functions ggpubr::ggscatter() & 
 ggpubr::ggpar().}

@@ -22,6 +22,8 @@ fviz_mca_ind(
   shape.ind = 19,
   map = "symmetric",
   select.ind = list(name = NULL, cos2 = NULL, contrib = NULL),
+  quanti.sup = FALSE,
+  col.quanti.sup = "#D55E00",
   ...
 )
 
@@ -57,13 +59,15 @@ fviz_mca_biplot(
   arrows = c(FALSE, FALSE),
   map = "symmetric",
   title = "MCA - Biplot",
+  quanti.sup = FALSE,
+  col.quanti.sup = "#D55E00",
   ...
 )
 
 fviz_mca(X, ...)
 }
 \arguments{
-\item{X}{an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA
+\item{X}{an object of class MCA [FactoMineR], acm [ade4] and expoOutput/epMCA
 [ExPosition].}
 
 \item{axes}{a numeric vector of length 2 specifying the dimensions to be 
@@ -80,8 +84,8 @@ variables.}
 respectively. Default is geom.ind = c("point", "text), geom.var =
 c("point", "text").}
 
-\item{repel}{a boolean, whether to use ggrepel to avoid overplotting text
-labels or not. The old \code{jitter} argument is kept for backward
+\item{repel}{logical; whether to use ggrepel to avoid overplotting text
+labels. The old \code{jitter} argument is kept for backward
 compatibility and is converted to \code{repel = TRUE} with a deprecation warning.}
 
 \item{habillage}{an optional factor variable for coloring the observations by 
@@ -102,8 +106,8 @@ case a basic color palette is created using the function
 individuals when habillage != "none".}
 
 \item{col.ind, col.var}{color for individuals and variables, respectively. Can 
-be a continuous variable or a factor variable. Possible values include also
-: "cos2", "contrib", "coord", "x" or "y". In this case, the colors for
+be a continuous variable or a factor variable. Possible values also include
+"cos2", "contrib", "coord", "x", and "y". In this case, the colors for
 individuals/variables are automatically controlled by their qualities
 ("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 , "coord"), x
 values("x") or y values("y"). To use automatic coloring (by cos2, contrib,
@@ -112,9 +116,9 @@ values("x") or y values("y"). To use automatic coloring (by cos2, contrib,
 \item{col.ind.sup}{color for supplementary individuals}
 
 \item{alpha.ind, alpha.var}{controls the transparency of individual and 
-variable colors, respectively. The value can variate from 0 (total 
+variable colors, respectively. The value can vary from 0 (total
 transparency) to 1 (no transparency). Default value is 1. Possible values 
-include also : "cos2", "contrib", "coord", "x" or "y". In this case, the 
+also include "cos2", "contrib", "coord", "x", and "y". In this case, the
 transparency for individual/variable colors are automatically controlled by 
 their qualities ("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 
 , "coord"), x values("x") or y values("y"). To use this, make sure that 
@@ -131,12 +135,25 @@ Allowed values are NULL or a list containing the arguments name, cos2 or
 contrib: \itemize{ \item name is a character vector containing 
 individuals/variables to be drawn \item cos2 if cos2 is in [0, 1], ex: 0.6, 
 then individuals/variables with a cos2 > 0.6 are drawn. if cos2 > 1, ex: 5, 
-then the top 5 individuals/variables with the highest cos2 are drawn. \item 
-contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with 
-the highest contrib are drawn }}
+then the top 5 individuals/variables with the highest cos2 are drawn. \item
+contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with
+the highest contrib are drawn \item union: logical. When several of
+name/cos2/contrib are given, FALSE (default) combines them with AND (each
+condition further narrows the selection); TRUE combines them with OR (an
+element is kept if it matches any condition), e.g. named items \emph{plus}
+the top-cos2 ones. }}
 
-\item{...}{Additional arguments. \itemize{ \item in fviz_mca_ind(), 
-fviz_mca_var() and fviz_mca_cor(): Additional arguments are passed to the 
+\item{quanti.sup}{logical. If \code{TRUE}, the supplementary quantitative
+variables of a FactoMineR \code{\link[FactoMineR]{MCA}} are overlaid on the
+individuals / biplot map as correlation arrows (see the Details section).
+Default \code{FALSE} leaves the map unchanged. Used by \code{fviz_mca_ind()}
+and \code{fviz_mca_biplot()}.}
+
+\item{col.quanti.sup, col.quali.sup}{a color for the quantitative/qualitative
+supplementary variables.}
+
+\item{...}{Additional arguments. \itemize{ \item in fviz_mca_ind() and
+fviz_mca_var() (including \code{choice = "mca.cor"}): Additional arguments are passed to the
 functions fviz() and ggpubr::ggpar(). \item in fviz_mca_biplot() and 
 fviz_mca(): Additional arguments are passed to fviz_mca_ind() and 
 fviz_mca_var().}}
@@ -146,11 +163,8 @@ fviz_mca_var().}}
 dimensions; ii) "var.cat" for variable categories and iii) "quanti.sup" for
 the supplementary quantitative variables.}
 
-\item{col.quanti.sup, col.quali.sup}{a color for the quantitative/qualitative 
-supplementary variables.}
-
 \item{label}{a text specifying the elements to be labelled. Default value is 
-"all". Allowed values are "none" or the combination of c("ind", 
+"all". Allowed values are "all", "none", or a combination of c("ind",
 "ind.sup","var", "quali.sup",  "quanti.sup"). "ind" can be used to label 
 only active individuals. "ind.sup" is for supplementary individuals. "var" 
 is for active variable categories. "quali.sup" is for supplementary 
@@ -158,7 +172,7 @@ qualitative variable categories. "quanti.sup" is for quantitative
 supplementary variables.}
 
 \item{invisible}{a text specifying the elements to be hidden on the plot. 
-Default value is "none". Allowed values are the combination of c("ind", 
+Default value is "none". Allowed values are "all", "none", or a combination of c("ind",
 "ind.sup","var", "quali.sup",  "quanti.sup").}
 
 \item{arrows}{Vector of two logicals specifying if the plot should contain 
@@ -174,10 +188,9 @@ a ggplot
 Multiple Correspondence Analysis (MCA) is an extension of simple 
  CA to analyse a data table containing more than two categorical variables. 
  fviz_mca() provides ggplot2-based elegant visualization of MCA outputs from 
- the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in
- ExPosition]. Read more: 
- \href{https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/}{Multiple
-  Correspondence Analysis Essentials.}
+ the R functions: MCA [in FactoMineR], acm [in ade4], and expoOutput/epMCA [in
+ ExPosition]. Read more:
+ \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-correspondence-analysis}{Multiple Correspondence Analysis (MCA) in R: Compute, Visualize & Interpret}.
  
  \itemize{ \item fviz_mca_ind(): Graph of individuals \item fviz_mca_var():
  Graph of variables \item fviz_mca_biplot(): Biplot of individuals and
@@ -188,8 +201,19 @@ The default plot of MCA is a "symmetric" plot in which both rows and
  columns are in principal coordinates. In this situation, it's not possible 
  to interpret the distance between row points and column points. To overcome 
  this problem, the simplest way is to make an asymmetric plot. The argument 
- "map" can be used to change the plot type. For more explanation, read the 
+ "map" can be used to change the plot type. For more explanation, read the
  details section of fviz_ca documentation.
+
+ \code{quanti.sup = TRUE} overlays the supplementary quantitative variables on
+ the individuals / biplot map. Each such variable is drawn as an arrow from the
+ origin in the direction of its correlations with the shown dimensions
+ (\code{X$quanti.sup$coord}), so the arrow points toward the region of the
+ cloud where the variable takes larger values. Each arrow's length is
+ proportional to the variable's absolute correlation with the shown dimensions
+ (a correlation of 1 reaches about 80\% of the individual-cloud extent), so a
+ weak covariate draws a short arrow. The overlay labels are repelled by default
+ (needs the \code{ggrepel} package). \strong{Arrow lengths are relative} to the
+ cloud, so compare directions and relative lengths rather than absolute sizes.
 }
 \examples{
 # Multiple Correspondence Analysis
@@ -213,7 +237,7 @@ fviz_mca_ind(res.mca, col.ind = "steelblue")
    # using the "cos2" or the contributions "contrib"
    # cos2 = the quality of the individuals on the factor map
 # 2. To keep only point or text use geom = "point" or geom = "text".
-# 3. Change themes: http://www.sthda.com/english/wiki/ggplot2-themes
+# 3. Change themes: https://www.datanovia.com/learn/data-visualization/ggplot2/themes
 
 fviz_mca_ind(res.mca, col.ind = "cos2", repel = TRUE)
 
@@ -229,15 +253,21 @@ grp <- as.factor(poison.active[, "Vomiting"])
 p <- fviz_mca_ind(res.mca, label="none", habillage=grp,
        addEllipses=TRUE, ellipse.level=0.95)
 print(p)
-      
-    
+
+# Overlay supplementary quantitative variables as correlation arrows.
+# Fit the MCA with quanti.sup, then set quanti.sup = TRUE when plotting.
+res.mca2 <- MCA(poison, quanti.sup = 1:2, quali.sup = 3:4, graph = FALSE)
+fviz_mca_ind(res.mca2, label = "none", habillage = poison$Vomiting,
+             addEllipses = TRUE, quanti.sup = TRUE)
+
+
 # Change group colors using RColorBrewer color palettes
-# Read more: http://www.sthda.com/english/wiki/ggplot2-colors
+# Read more: https://www.datanovia.com/learn/data-visualization/ggplot2/colors
 p + scale_color_brewer(palette="Dark2") +
     scale_fill_brewer(palette="Dark2") 
      
 # Change group colors manually
-# Read more: http://www.sthda.com/english/wiki/ggplot2-colors
+# Read more: https://www.datanovia.com/learn/data-visualization/ggplot2/colors
 p + scale_color_manual(values=c("#999999", "#E69F00"))+
  scale_fill_manual(values=c("#999999", "#E69F00"))
              
@@ -299,7 +329,8 @@ fviz_mca_biplot(res.mca,
 }
 \seealso{
 \code{\link{get_mca}}, \code{\link{fviz_pca}}, \code{\link{fviz_ca}},
- \code{\link{fviz_mfa}}, \code{\link{fviz_hmfa}}
+ \code{\link{fviz_mfa}}, \code{\link{fviz_hmfa}}.
+ Online tutorial: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-correspondence-analysis}{Multiple Correspondence Analysis (MCA) in R: Compute, Visualize & Interpret}.
 }
 \author{
 Alboukadel Kassambara \email{alboukadel.kassambara@gmail.com}

@@ -5,54 +5,58 @@ NULL
 #'@description Multiple Correspondence Analysis (MCA) is an extension of simple 
 #'  CA to analyse a data table containing more than two categorical variables. 
 #'  fviz_mca() provides ggplot2-based elegant visualization of MCA outputs from 
-#'  the R functions: MCA [in FactoMineR], acm [in ade4], and expOutput/epMCA [in
-#'  ExPosition]. Read more: 
-#'  \href{https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/}{Multiple
-#'   Correspondence Analysis Essentials.}
+#'  the R functions: MCA [in FactoMineR], acm [in ade4], and expoOutput/epMCA [in
+#'  ExPosition]. Read more:
+#'  \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-correspondence-analysis}{Multiple Correspondence Analysis (MCA) in R: Compute, Visualize & Interpret}.
 #'  
 #'  \itemize{ \item fviz_mca_ind(): Graph of individuals \item fviz_mca_var():
 #'  Graph of variables \item fviz_mca_biplot(): Biplot of individuals and
 #'  variables \item fviz_mca(): An alias of fviz_mca_biplot() }
-#'@param X an object of class MCA [FactoMineR], acm [ade4] and expOutput/epMCA
+#'@param X an object of class MCA [FactoMineR], acm [ade4] and expoOutput/epMCA
 #'  [ExPosition].
 #'@inheritParams fviz_pca
 #' @param geom.ind,geom.var as \code{geom} but for individuals and variables,
 #'   respectively. Default is geom.ind = c("point", "text), geom.var =
 #'   c("point", "text").
 #'@param label a text specifying the elements to be labelled. Default value is 
-#'  "all". Allowed values are "none" or the combination of c("ind", 
+#'  "all". Allowed values are "all", "none", or a combination of c("ind",
 #'  "ind.sup","var", "quali.sup",  "quanti.sup"). "ind" can be used to label 
 #'  only active individuals. "ind.sup" is for supplementary individuals. "var" 
 #'  is for active variable categories. "quali.sup" is for supplementary 
 #'  qualitative variable categories. "quanti.sup" is for quantitative 
 #'  supplementary variables.
 #'@param invisible a text specifying the elements to be hidden on the plot. 
-#'  Default value is "none". Allowed values are the combination of c("ind", 
+#'  Default value is "none". Allowed values are "all", "none", or a combination of c("ind",
 #'  "ind.sup","var", "quali.sup",  "quanti.sup").
 #'@param habillage an optional factor variable for coloring the observations by 
 #'  groups. Default value is "none". If X is an MCA object from FactoMineR 
 #'  package, habillage can also specify the index of the factor variable in the 
 #'  data.
 #'@param col.ind,col.var color for individuals and variables, respectively. Can 
-#'  be a continuous variable or a factor variable. Possible values include also
-#'  : "cos2", "contrib", "coord", "x" or "y". In this case, the colors for
+#'  be a continuous variable or a factor variable. Possible values also include
+#'  "cos2", "contrib", "coord", "x", and "y". In this case, the colors for
 #'  individuals/variables are automatically controlled by their qualities
 #'  ("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 , "coord"), x
 #'  values("x") or y values("y"). To use automatic coloring (by cos2, contrib,
 #'  ....), make sure that habillage ="none".
 #'@param alpha.ind,alpha.var controls the transparency of individual and 
-#'  variable colors, respectively. The value can variate from 0 (total 
+#'  variable colors, respectively. The value can vary from 0 (total
 #'  transparency) to 1 (no transparency). Default value is 1. Possible values 
-#'  include also : "cos2", "contrib", "coord", "x" or "y". In this case, the 
+#'  also include "cos2", "contrib", "coord", "x", and "y". In this case, the
 #'  transparency for individual/variable colors are automatically controlled by 
 #'  their qualities ("cos2"), contributions ("contrib"), coordinates (x^2 + y^2 
 #'  , "coord"), x values("x") or y values("y"). To use this, make sure that 
 #'  habillage ="none".
 #'@param shape.ind,shape.var point shapes of individuals and variables.
-#'@param col.quanti.sup,col.quali.sup a color for the quantitative/qualitative 
+#'@param col.quanti.sup,col.quali.sup a color for the quantitative/qualitative
 #'  supplementary variables.
-#'@param repel a boolean, whether to use ggrepel to avoid overplotting text
-#'  labels or not. The old \code{jitter} argument is kept for backward
+#'@param quanti.sup logical. If \code{TRUE}, the supplementary quantitative
+#'  variables of a FactoMineR \code{\link[FactoMineR]{MCA}} are overlaid on the
+#'  individuals / biplot map as correlation arrows (see the Details section).
+#'  Default \code{FALSE} leaves the map unchanged. Used by \code{fviz_mca_ind()}
+#'  and \code{fviz_mca_biplot()}.
+#'@param repel logical; whether to use ggrepel to avoid overplotting text
+#'  labels. The old \code{jitter} argument is kept for backward
 #'  compatibility and is converted to \code{repel = TRUE} with a deprecation warning.
 #'@param choice the graph to plot. Allowed values include: i) "var" and 
 #'  "mca.cor" for plotting the correlation between variables and principal 
@@ -64,13 +68,17 @@ NULL
 #'  contrib: \itemize{ \item name is a character vector containing 
 #'  individuals/variables to be drawn \item cos2 if cos2 is in [0, 1], ex: 0.6, 
 #'  then individuals/variables with a cos2 > 0.6 are drawn. if cos2 > 1, ex: 5, 
-#'  then the top 5 individuals/variables with the highest cos2 are drawn. \item 
-#'  contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with 
-#'  the highest contrib are drawn }
+#'  then the top 5 individuals/variables with the highest cos2 are drawn. \item
+#'  contrib if contrib > 1, ex: 5,  then the top 5 individuals/variables with
+#'  the highest contrib are drawn \item union: logical. When several of
+#'  name/cos2/contrib are given, FALSE (default) combines them with AND (each
+#'  condition further narrows the selection); TRUE combines them with OR (an
+#'  element is kept if it matches any condition), e.g. named items \emph{plus}
+#'  the top-cos2 ones. }
 #'@inheritParams ggpubr::ggpar
 #'@inheritParams fviz
-#'@param ... Additional arguments. \itemize{ \item in fviz_mca_ind(), 
-#'  fviz_mca_var() and fviz_mca_cor(): Additional arguments are passed to the 
+#'@param ... Additional arguments. \itemize{ \item in fviz_mca_ind() and
+#'  fviz_mca_var() (including \code{choice = "mca.cor"}): Additional arguments are passed to the
 #'  functions fviz() and ggpubr::ggpar(). \item in fviz_mca_biplot() and 
 #'  fviz_mca(): Additional arguments are passed to fviz_mca_ind() and 
 #'  fviz_mca_var().}
@@ -84,13 +92,25 @@ NULL
 #'  columns are in principal coordinates. In this situation, it's not possible 
 #'  to interpret the distance between row points and column points. To overcome 
 #'  this problem, the simplest way is to make an asymmetric plot. The argument 
-#'  "map" can be used to change the plot type. For more explanation, read the 
+#'  "map" can be used to change the plot type. For more explanation, read the
 #'  details section of fviz_ca documentation.
-#'  
+#'
+#'  \code{quanti.sup = TRUE} overlays the supplementary quantitative variables on
+#'  the individuals / biplot map. Each such variable is drawn as an arrow from the
+#'  origin in the direction of its correlations with the shown dimensions
+#'  (\code{X$quanti.sup$coord}), so the arrow points toward the region of the
+#'  cloud where the variable takes larger values. Each arrow's length is
+#'  proportional to the variable's absolute correlation with the shown dimensions
+#'  (a correlation of 1 reaches about 80\% of the individual-cloud extent), so a
+#'  weak covariate draws a short arrow. The overlay labels are repelled by default
+#'  (needs the \code{ggrepel} package). \strong{Arrow lengths are relative} to the
+#'  cloud, so compare directions and relative lengths rather than absolute sizes.
+#'
 #'@return a ggplot
 #'@author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
 #'@seealso \code{\link{get_mca}}, \code{\link{fviz_pca}}, \code{\link{fviz_ca}},
-#'  \code{\link{fviz_mfa}}, \code{\link{fviz_hmfa}}
+#'  \code{\link{fviz_mfa}}, \code{\link{fviz_hmfa}}.
+#'  Online tutorial: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-correspondence-analysis}{Multiple Correspondence Analysis (MCA) in R: Compute, Visualize & Interpret}.
 #' @examples
 #' # Multiple Correspondence Analysis
 #' # ++++++++++++++++++++++++++++++
@@ -113,7 +133,7 @@ NULL
 #'    # using the "cos2" or the contributions "contrib"
 #'    # cos2 = the quality of the individuals on the factor map
 #' # 2. To keep only point or text use geom = "point" or geom = "text".
-#' # 3. Change themes: http://www.sthda.com/english/wiki/ggplot2-themes
+#' # 3. Change themes: https://www.datanovia.com/learn/data-visualization/ggplot2/themes
 #' 
 #' fviz_mca_ind(res.mca, col.ind = "cos2", repel = TRUE)
 #'
@@ -129,15 +149,21 @@ NULL
 #' p <- fviz_mca_ind(res.mca, label="none", habillage=grp,
 #'        addEllipses=TRUE, ellipse.level=0.95)
 #' print(p)
-#'       
-#'     
+#'
+#' # Overlay supplementary quantitative variables as correlation arrows.
+#' # Fit the MCA with quanti.sup, then set quanti.sup = TRUE when plotting.
+#' res.mca2 <- MCA(poison, quanti.sup = 1:2, quali.sup = 3:4, graph = FALSE)
+#' fviz_mca_ind(res.mca2, label = "none", habillage = poison$Vomiting,
+#'              addEllipses = TRUE, quanti.sup = TRUE)
+#'
+#'
 #' # Change group colors using RColorBrewer color palettes
-#' # Read more: http://www.sthda.com/english/wiki/ggplot2-colors
+#' # Read more: https://www.datanovia.com/learn/data-visualization/ggplot2/colors
 #' p + scale_color_brewer(palette="Dark2") +
 #'     scale_fill_brewer(palette="Dark2") 
 #'      
 #' # Change group colors manually
-#' # Read more: http://www.sthda.com/english/wiki/ggplot2-colors
+#' # Read more: https://www.datanovia.com/learn/data-visualization/ggplot2/colors
 #' p + scale_color_manual(values=c("#999999", "#E69F00"))+
 #'  scale_fill_manual(values=c("#999999", "#E69F00"))
 #'              
@@ -200,20 +226,26 @@ NULL
 #'@rdname fviz_mca
 #'@export
 fviz_mca_ind <- function(X,  axes = c(1,2), geom=c("point", "text"), geom.ind = geom, repel = FALSE,
-                         habillage = "none", palette = NULL, addEllipses = FALSE, 
+                         habillage = "none", palette = NULL, addEllipses = FALSE,
                          col.ind = "blue", col.ind.sup = "darkblue", alpha.ind = 1,
-                         shape.ind = 19, map ="symmetric", 
+                         shape.ind = 19, map ="symmetric",
                          select.ind = list(name = NULL, cos2 = NULL, contrib = NULL),
+                         quanti.sup = FALSE, col.quanti.sup = "#D55E00",
                          ...)
 {
-  
-  fviz (X, element = "ind", axes = axes, geom = geom.ind, habillage = habillage, 
+
+  p <- fviz (X, element = "ind", axes = axes, geom = geom.ind, habillage = habillage,
         addEllipses = addEllipses, palette = palette, pointshape = shape.ind,
         color = col.ind, alpha = alpha.ind,
         shape.sup = shape.ind, col.row.sup = col.ind.sup,
         select = select.ind,  map = map, repel = repel, ...)
 
-  
+  # Overlay supplementary quantitative variables as scaled correlation arrows.
+  # Default quanti.sup = FALSE leaves the map unchanged.
+  if(isTRUE(quanti.sup))
+    p <- .add_mca_quanti_sup(p, X, axes = axes, col = col.quanti.sup)
+
+  p
 }
 
 
@@ -257,16 +289,20 @@ fviz_mca_biplot <- function(X,  axes = c(1,2), geom = c("point", "text"),
                             geom.ind = geom, geom.var = geom,
                             repel = FALSE, label = "all", invisible="none",
                             habillage="none", addEllipses=FALSE, palette = NULL,
-                            arrows = c(FALSE, FALSE), map ="symmetric", 
-                            title = "MCA - Biplot", ...)
+                            arrows = c(FALSE, FALSE), map ="symmetric",
+                            title = "MCA - Biplot",
+                            quanti.sup = FALSE, col.quanti.sup = "#D55E00", ...)
 {
-  
+
   # Individuals
   geom2 <- geom.ind
   if(arrows[1]==TRUE) geom2 <- setdiff(unique(c(geom2, "arrow")), "point")
+  # quanti.sup/col.quanti.sup are forwarded explicitly (not via ...) so they do
+  # not leak into fviz_mca_var() below.
   p <- fviz_mca_ind(X,  axes = axes, geom = geom2, repel = repel,
                     label = label, invisible=invisible, habillage = habillage,
-                    addEllipses = addEllipses, palette = palette, map = map, ...)
+                    addEllipses = addEllipses, palette = palette, map = map,
+                    quanti.sup = quanti.sup, col.quanti.sup = col.quanti.sup, ...)
 
   # Variable
   geom2 <- geom.var
@@ -283,5 +319,3 @@ fviz_mca_biplot <- function(X,  axes = c(1,2), geom = c("point", "text"),
 fviz_mca <- function(X, ...){
   fviz_mca_biplot(X, ...)
 }
-
-

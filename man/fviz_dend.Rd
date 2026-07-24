@@ -18,6 +18,9 @@ fviz_dend(
   labels_track_height = NULL,
   repel = FALSE,
   lwd = 0.7,
+  highlight = NULL,
+  highlight.col = "red",
+  highlight.lwd = NULL,
   type = c("rectangle", "circular", "phylogenic"),
   phylo_layout = "layout.auto",
   rect = FALSE,
@@ -36,7 +39,7 @@ fviz_dend(
 )
 }
 \arguments{
-\item{x}{an object of class dendrogram, hclust, agnes, diana, hcut, 
+\item{x}{an object of class dendrogram, hclust, agnes, diana, hcut,
 hkmeans or HCPC (FactoMineR).}
 
 \item{k}{the number of groups for cutting the tree.}
@@ -45,7 +48,7 @@ hkmeans or HCPC (FactoMineR).}
 overrides h)}
 
 \item{k_colors, palette}{a vector containing colors to be used for the groups.
-It should contains k number of colors. Allowed values include also "grey" 
+It should contain \code{k} colors. Allowed values also include "grey"
 for grey color palettes; brewer palettes e.g. "RdBu", "Blues", ...;  and 
 scientific journal palettes from ggsci R package, e.g.: "npg", "aaas", 
 "lancet", "jco", "ucscgb", "uchicago", "simpsons" and "rickandmorty".}
@@ -71,15 +74,29 @@ Default "plain" leaves labels unchanged.}
 labels. Used only when type = "rectangle".}
 
 \item{repel}{logical value. Use repel = TRUE to avoid label overplotting when
-type = "phylogenic".}
+\code{type = "phylogenic"}. The literal \code{"phylogenic"} value is a
+historical API token retained for compatibility.}
 
 \item{lwd}{a numeric value specifying dendrogram branch and rectangle line
 width.}
 
-\item{type}{type of plot. Allowed values are one of "rectangle", "triangle", 
-"circular", "phylogenic".}
+\item{highlight}{an optional character vector of leaf labels; the branches
+leading to those leaves are emphasized (thicker, and coloured
+\code{highlight.col}) while every other branch keeps its colour and width.
+\code{NULL} (default) highlights nothing. Has no effect for
+\code{type = "phylogenic"} (that layout does not colour branch segments).}
 
-\item{phylo_layout}{the layout to be used for phylogenic trees. Default value
+\item{highlight.col}{colour (name or hex) for the highlighted branches.}
+
+\item{highlight.lwd}{line width for the highlighted branches. \code{NULL}
+(default) uses \code{2 * lwd} so the emphasis stands out by thickness
+regardless of colour; set \code{highlight.lwd = lwd} for colour-only emphasis.}
+
+\item{type}{type of plot. Allowed values are \code{"rectangle"},
+\code{"circular"}, and the historical compatibility token
+\code{"phylogenic"} for a phylogenetic-style tree.}
+
+\item{phylo_layout}{the layout used for phylogenetic-style trees. Default value
 is "layout.auto", which is kept as a compatibility alias for
 \code{"layout_nicely"}. Allowed values include:
 \code{\link[igraph]{layout.auto}}, \code{\link[igraph]{layout_nicely}},
@@ -98,7 +115,7 @@ groups. Used only when k != NULL.}
 \item{lower_rect}{a value of how low should the lower part of the rectangle 
 around clusters. Ignored when rect = FALSE.}
 
-\item{horiz}{a logical value. If TRUE, an horizontal dendrogram is drawn.}
+\item{horiz}{a logical value. If TRUE, a horizontal dendrogram is drawn.}
 
 \item{cex}{size of labels}
 
@@ -116,14 +133,44 @@ theme_gray(), theme_bw(), theme_minimal(), theme_classic(), theme_void(),
 \item{...}{other arguments to be passed to the function plot.dendrogram()}
 }
 \value{
-an object of class fviz_dend which is a ggplot with the attributes 
-  "dendrogram" accessible using attr(x, "dendrogram"), where x is the result 
+an object of class fviz_dend which is a ggplot with the attributes
+  "dendrogram" accessible using attr(x, "dendrogram"), where x is the result
   of fviz_dend().
 }
 \description{
 Draws easily beautiful dendrograms using either R base plot or 
-  ggplot2. Provides also an option for drawing a circular dendrogram and 
-  phylogenic trees.
+  ggplot2. It also provides options for circular dendrograms and
+  phylogenetic-style trees.
+
+Read more: \href{https://www.datanovia.com/learn/machine-learning/clustering/visualizing-dendrograms}{Visualizing Dendrograms in R: Color, Zoom & Customize};
+to compare two trees see \href{https://www.datanovia.com/learn/machine-learning/clustering/comparing-dendrograms}{Comparing Dendrograms in R: Tanglegrams & Correlation}.
+}
+\details{
+For branch styling beyond \code{highlight} - for example dashed
+  branches or per-branch colours - pre-style a \code{dendextend} dendrogram and
+  pass it to \code{fviz_dend()}, which honours its \code{set()} aesthetics:
+  \preformatted{
+  library(dendextend)
+  dend <- as.dendrogram(hclust(dist(scale(USArrests))))
+  dend <- set(dend, "branches_lty", 2)   # dashed branches
+  fviz_dend(dend)
+  }
+
+  \strong{Comparing two dendrograms.} To compare two hierarchical clusterings of
+  the same observations (e.g. different linkages), draw a \emph{tanglegram} with
+  \code{dendextend} (already a dependency): the two trees face each other, matched
+  leaves are connected, and \code{entanglement()} measures agreement (0 = perfect,
+  1 = worst). This uses base graphics.
+  \preformatted{
+  library(dendextend)
+  d1 <- as.dendrogram(hclust(dist(scale(USArrests)), "complete"))
+  d2 <- as.dendrogram(hclust(dist(scale(USArrests)), "average"))
+  dl <- dendlist(d1, d2)
+  dl <- untangle(dl, method = "step2side")        # reduce crossings
+  tanglegram(dl, common_subtrees_color_branches = TRUE)
+  entanglement(dl)                                 # agreement, in [0, 1]
+  }
+  Both dendrograms must share the same leaf labels.
 }
 \examples{
 \donttest{
@@ -163,7 +210,7 @@ fviz_dend(res.hc, k = 4,
    k_colors = c("blue", "green3", "red", "black"),
    label_cols =  km.clust[res.hc$order], cex = 0.6)
 
- # Phylogenic tree layouts support both compatibility aliases and
+ # Phylogenetic-style tree layouts support both compatibility aliases and
  # current igraph layout names
  if (requireNamespace("igraph", quietly = TRUE)) {
    fviz_dend(res.hc, type = "phylogenic", phylo_layout = "layout_nicely",
@@ -171,4 +218,10 @@ fviz_dend(res.hc, k = 4,
  }
 
 }
+}
+\seealso{
+\code{\link[dendextend]{tanglegram}}, \code{\link[dendextend]{entanglement}}
+  for comparing two dendrograms (see \strong{Details}).
+  Online tutorials: \href{https://www.datanovia.com/learn/machine-learning/clustering/visualizing-dendrograms}{Visualizing Dendrograms in R: Color, Zoom & Customize}
+  and \href{https://www.datanovia.com/learn/machine-learning/clustering/comparing-dendrograms}{Comparing Dendrograms in R: Tanglegrams & Correlation}.
 }

@@ -1,3 +1,249 @@
+# factoextra 2.2.0
+
+## New features
+
+* `fviz_dend()` gains a `highlight` argument to emphasize the branches leading to
+  specific leaves (with `highlight.col` / `highlight.lwd`); it layers on top of
+  the cluster colouring, so highlighted branches stand out while every other
+  branch keeps its colour. `highlight = NULL` (default) is unchanged. For other
+  branch styling (e.g. dashed branches) pass a pre-styled `dendextend` object,
+  which `fviz_dend()` honours (see `?fviz_dend`).
+
+* New `fviz_umap()` and `fviz_tsne()` to visualize a 2-D UMAP or t-SNE embedding
+  (from `uwot`, `Rtsne`, `umap`, or a plain coordinate matrix) with factoextra's
+  grouping, ellipse and palette styling, including colouring points by a
+  continuous feature value. An embedding has no eigenvalues, so the axes are
+  labelled `UMAP1`/`UMAP2` (`tSNE1`/`tSNE2`) without a percentage and there is no
+  scree plot, loadings or correlation circle; when requested, the group outline
+  defaults to a convex hull rather than a normal confidence ellipse (which would
+  assume a metric the embedding does not preserve). `uwot` and `Rtsne` are
+  Suggests.
+
+* `as_factoextra_pca()` gains `recipe` and `workflow` methods, so a PCA fitted
+  inside a tidymodels `recipe` (`recipes::step_pca()`) or a fitted `workflow`
+  plots directly with the `fviz_pca_*`/`fviz_eig`/`fviz_contrib`/`fviz_cos2`
+  family: `prep(rec) |> as_factoextra_pca() |> fviz_pca_biplot()`. Scores,
+  loadings and the full set of eigenvalues are extracted through the public
+  recipes/workflows API, so the scree plot and axis percentages are honest even
+  when only a few components are kept. When inputs are provably centered,
+  variable-component correlations and cos2 are recovered separately from the
+  loading-times-component-SD arrow coordinates; the two coincide for centered,
+  unit-scaled inputs. `recipes` and `workflows` are Suggests.
+
+* New `factoextra_palette()` and `theme_factoextra()`. `factoextra_palette("okabe")`
+  returns the Okabe-Ito colorblind-safe categorical colors as a vector to pass to
+  the existing `palette` argument (e.g. `fviz_cluster(res, palette =
+  factoextra_palette("okabe"))`); `theme_factoextra()` is a clean publication theme
+  with a light coordinate grid, passed via `ggtheme` or added with `+`. Both are
+  explicit and stateless (no global option). The Okabe-Ito colors are those of
+  `grDevices::palette.colors("Okabe-Ito")`.
+
+* `fviz_nbclust()` and `fviz_gap_stat()` gain a `mark_optimal` argument. Set
+  `mark_optimal = TRUE` to mark the elbow of the `"wss"` plot with a dashed guide
+  line (a deterministic maximum-distance heuristic; see `?fviz_nbclust`);
+  `mark_optimal = FALSE` omits the optimal-cluster guide line for every method.
+  The default (`NULL`) keeps each method's existing behavior: the guide line is
+  shown for `"silhouette"` and `"gap_stat"` and omitted for `"wss"`.
+* `fviz_cos2()` and `fviz_contrib()` gain a `display` argument. `display = "heatmap"`
+  draws a grid with one tile per element and dimension, filled and labelled by the
+  per-dimension cos2/contribution, so the quality/contribution across several
+  dimensions can be read at once. The default (`display = "bar"`) is unchanged.
+* `fviz_pca_ind()`, `fviz_cluster()` (and the other individual / row / column
+  plots) gain a `max.points` argument for large datasets. When there are more
+  than `max.points` points, a reproducible random subset of that many is drawn so
+  labels, colours and ellipses stay readable instead of over-plotting. When points
+  are grouped (e.g. `habillage`, or clusters in `fviz_cluster()`) the draw is
+  stratified so every group keeps a minimum number of points and none is
+  decimated, and a message reports how many points are shown. Only the drawn
+  points are thinned: any ellipse (`addEllipses` / the cluster frame) and the
+  group/cluster centres are still computed on the full data, so a convex hull or
+  confidence ellipse is not distorted by dropping the extreme points a random
+  draw tends to lose. A continuous colour, fill or size mapping (e.g. `col.ind =
+  "cos2"`) and its legend are likewise pinned to the full-data range, so a
+  point's colour, fill and size do not depend on how many points are drawn. The
+  draw does not disturb the caller's random stream.
+  `max.points = NULL` (default) draws every point, and `sample.seed` controls
+  which subset is chosen.
+* `fviz_mca_ind()` and `fviz_mca_biplot()` gain a `quanti.sup` argument. Set
+  `quanti.sup = TRUE` to overlay the supplementary quantitative variables of a
+  FactoMineR MCA on the map as correlation arrows, so a continuous covariate's
+  direction can be read against the category/individual cloud. Each arrow's length
+  is proportional to the variable's absolute correlation with the dimensions
+  (relative to the cloud extent). The default (`quanti.sup = FALSE`) leaves the map
+  unchanged.
+* The `select.ind` / `select.var` (and `select.row` / `select.col`) lists gain a
+  `union` element. When several of `name` / `cos2` / `contrib` are supplied they
+  are combined with AND by default (each condition further narrows the selection,
+  as before); `union = TRUE` combines them with OR instead, so named elements are
+  kept *together with* the top-`cos2` or top-`contrib` ones, e.g. `select.var =
+  list(name = c("V1", "V2"), contrib = 10, union = TRUE)`. The same result can
+  still be obtained by precomputing the set and passing it as `name`; `union` is a
+  convenience for building it inline. The default (no `union`, or `union = FALSE`)
+  is unchanged. Thanks to @qfazille (#53).
+
+## Main changes
+
+* `get_pca_ind()`: individual contributions for `prcomp` objects, and for `ade4`
+  PCA objects with non-uniform row weights, are now normalized to sum to 100
+  percent per axis, matching `FactoMineR::PCA()`. Previously `prcomp` individual
+  contributions were divided by the (n-1)-normalized eigenvalue and summed to
+  `100 * (n - 1) / n` instead of 100. This changes the individual contribution
+  values returned for those objects (and any `fviz_contrib()` / `fviz_pca()`
+  colouring derived from them). `princomp` individual contributions,
+  coordinates, and cos2 are unchanged for ordinary finite inputs. Variable
+  contributions are unchanged on nonzero, ordinarily scaled axes; zero-inertia
+  and extreme-magnitude axes now return stable finite values instead of NaN or
+  overflow. For a rank-truncated `prcomp` object, individual cos2 is explicitly
+  defined within the retained component subspace because discarded row inertia
+  is not stored in the fit. The corrected values match `FactoMineR::PCA()` and
+  `ade4::inertia.dudi()`. Thanks to @erdeyl (#274).
+
+* `fviz_pca_biplot()`: `biplot.type = "form"` and `biplot.type = "covariance"`
+  now use the exact Gabriel biplot factorization, matching
+  `stats::biplot(scale = 0)` and `stats::biplot(scale = 1)` respectively, instead
+  of the previous display heuristic. The usual `biplot.type = "auto"` scaling
+  algorithm is otherwise unchanged. Rank-truncated `prcomp` fits now use only
+  the retained component standard deviations when computing variable
+  coordinates, avoiding recycled values and incorrect arrows. The exact modes
+  also handle formula fits with `na.exclude`; covariance mode uses `n.obs` for
+  `princomp`, matching `stats::biplot()`. The exact modes require a `prcomp` /
+  `princomp` object. Thanks to @erdeyl (#274).
+
+* `as_factoextra_pca()` recipe / workflow methods (tidymodels): variable-component
+  correlations and cos2 are now recovered from the full PCA inertia, so they match
+  `FactoMineR::PCA()` of the same data even when `step_pca()` keeps only a few
+  components (previously the cos2 was normalized within the retained subspace and
+  matched only when all components were kept). `scale.unit` is set to `TRUE` only
+  when every PCA input is both centered and unit-scaled at the PCA boundary.
+  When the metrics cannot be recovered (e.g. a bare `step_pca()` or a
+  zero-inertia variable), `get_pca_var()` returns `NULL` for its correlation and
+  cos2 entries instead of synthesizing them from the retained coordinates.
+  Scores, eigenvalues, variable coordinates and contributions remain available,
+  so ordinary variable arrows still work; correlation/cos2-dependent displays
+  fail explicitly, the correlation circle is omitted, and a warning gives the
+  applicable centering or zero-inertia remedy. For fully normalized inputs, the
+  recovered metrics match `FactoMineR::PCA()`. To keep scores consistent with the
+  fitted loadings and eigenvalues, `step_pca()` must be the final recipe step.
+  Case-weighted fits fail explicitly until their weights can be propagated into
+  individual contributions. Thanks to @erdeyl (#274).
+
+* `get_clust_tendency()`: the Hopkins statistic now samples the observed points
+  **without replacement** (the previous code sampled with replacement, which could
+  draw the same observation more than once), counts a duplicated row as a valid
+  zero-distance neighbour, and is computed on a normalized distance scale for
+  numerical stability. Zero-range columns are ignored, so adding a redundant
+  constant variable does not change the statistic. This changes the Hopkins value
+  returned for a given `seed`.
+  It now errors clearly when every nearest-neighbour distance is zero (the
+  statistic is undefined). Thanks to @erdeyl (#274).
+
+* `fviz_eig(parallel = TRUE)` (Horn's parallel analysis, an opt-in overlay):
+  the simulated eigenvalue thresholds now use a corrected reference distribution.
+  Covariance PCA (`prcomp(scale. = FALSE)` / `princomp(cor = FALSE)`) previously
+  simulated unit-variance random data, giving statistically wrong thresholds; the
+  reference now matches the fitted object's marginal variances. Full-rank
+  correlation PCA is unaffected in distribution (parallel analysis is a
+  Monte-Carlo procedure, so exact threshold values depend on the seed);
+  wide (n <= p) fits now simulate over the original variable count. A
+  rank-truncated correlation fit is accepted only when a retained formula call
+  proves literal `scale. = TRUE`; default-method and custom/symbolic scale fits
+  cannot be distinguished from the truncated object and fail closed. Other fits
+  whose reference distribution cannot be reconstructed (uncentered fits,
+  rank-truncated covariance fits, ambiguous `princomp` `cor`) also error clearly
+  instead of returning misleading thresholds. Separately, `fviz_eig()` warns when a
+  FactoMineR PCA object stores an incomplete eigenvalue spectrum (refit with a
+  larger `ncp` for a complete scree plot). Thanks to @erdeyl (#274).
+
+* `fviz_gap_stat()` (and `fviz_nbclust(method = "gap_stat")`): when a partial
+  `maxSE` list is supplied without a `method`, the fallback is now `"firstSEmax"`
+  (the documented default and `cluster::maxSE`'s default) instead of `"firstmax"`.
+  This only affects callers who pass, e.g., `maxSE = list(SE.factor = 2)` with no
+  `method`; the previous `"firstmax"` fallback silently ignored the `SE.factor`
+  they set (that rule does not use it). Default calls and calls that pass a
+  `method` are unchanged. `eclust()`'s internal gap default is aligned for
+  consistency. Thanks to @erdeyl (#274).
+
+## Minor changes
+
+* `fviz_dend()`: corrected the documentation of the `type` argument, which listed
+  a `"triangle"` value that the function does not accept (the valid values are
+  `"rectangle"`, `"circular"` and `"phylogenic"`). Thanks to @Nelson-Gon (#144).
+* `?fviz_dend` now documents how to compare two dendrograms (a tanglegram) with
+  `dendextend::tanglegram()` / `untangle()` / `entanglement()`, which factoextra
+  already depends on.
+* Fixed a typo in the default title of `fviz_cos2()` / `fviz_contrib()` for
+  quantitative variables ("quantitive" -> "quantitative").
+* Clarified and corrected documentation across several help pages: the
+  contribution-based selection help now says "highest contributions" (was
+  "highest cos2"), `fviz_famd()`'s `habillage` help refers to a FAMD (not MFA)
+  object, the ExPosition class name is spelled `expoOutput` in `fviz_ca()` /
+  `fviz_mca()`, the generated `ggtheme` help no longer claims a single default
+  that disagrees with function signatures, and the `clean_lock_files()` example
+  is now self-contained. The HMFA selection help now includes the supported
+  `union` option.
+  Thanks to @erdeyl (#274).
+* Clearer, earlier input validation for edge cases, so mistakes fail with an
+  informative message instead of a downstream error: `fviz_umap()`/`fviz_tsne()`
+  require two distinct positive integer `dims`; `fviz_nbclust()` validates
+  `k.max`; `fviz_dend()` validates `k`/`h` against the tree; `get_clust_tendency()`
+  checks `n` and requires finite data; oversized axis indices are rejected before
+  integer conversion; and `as_factoextra_pca()` validates `scale.unit` and the
+  supplied eigenvalues. Valid calls are unaffected.
+  Thanks to @erdeyl (#274).
+* `as_factoextra_pca()` now derives cos2, contributions, and eigenvalue
+  percentages on rescaled intermediate values and infers omitted eigenvalues
+  without premature overflow, so representable results remain stable at very
+  small or very large magnitudes. Its PCA-variable print method lists only
+  metrics that are actually available while preserving the established
+  descriptions for metrics that remain present.
+* `get_eigenvalue()` (and the `fviz_eig()` scree plot) computes the variance
+  percentages on a rescaled intermediate, so an extreme-magnitude eigenvalue
+  spectrum returns finite percentages instead of `NaN` or an overflow. Ordinary
+  spectra are unchanged to floating-point precision.
+* `get_pca_var()`: for `ade4` `dudi.pca` objects, the `coord` and `contrib`
+  components are now returned as plain numeric matrices, matching the `prcomp`
+  and `princomp` output; the values are unchanged.
+* Function help pages and the `README` now link to the corresponding Datanovia
+  tutorial for each method, and the retired `sthda.com` documentation links were
+  refreshed to their current `datanovia.com` locations.
+
+## Bug fixes
+
+* `fviz_dend()`: the `cex` argument now scales the leaf-label size for the
+  `"rectangle"` and `"circular"` types. The label size was mapped through
+  ggplot2's default continuous size scale, which collapsed a single per-plot
+  `cex` value to a fixed size, so `cex` had no visible effect; leaf labels are
+  now sized directly from `cex` (and a per-leaf `labels_cex` set through
+  dendextend is honoured). At the default `cex = 0.8` the labels are marginally
+  smaller than before. Thanks to @dir21 (#281).
+* `fviz_ca_biplot()` / `fviz_ca()`: `invisible = "col.sup"` now hides
+  supplementary columns (the column branch was keyed off the row-supplementary
+  flag, so supplementary columns stayed visible). Thanks to @erdeyl (#274).
+* `fviz_mclust()` now applies the `ggtheme` argument to every plot type
+  (`"classification"`, `"uncertainty"`, `"BIC"`); it previously ignored it and
+  always used `theme_classic()`. The default is unchanged. Thanks to @erdeyl (#274).
+* `fviz_cluster()` now aligns a named clustering to the plotted data by row name
+  when both carry complete, unique, matching names, so points are not
+  mis-coloured when `data` is ordered differently from the clustering; it also
+  accepts a `clustering` component (as produced by `pam()`/`clara()`) in a custom
+  `list(data=, clustering=)` object. Assignments that do not line up by name are
+  used positionally, as before, except that `pam()` / `fanny()` and `hcut()`
+  objects fitted on a dissimilarity reject complete non-matching row-name sets
+  because positional use would mis-colour observations. Thanks to @erdeyl (#274).
+* `invisible = "all"` now hides all plotted elements (it was silently accepted
+  but had no effect); on the individual and variable maps, a selection by `name`
+  that includes names not present now warns instead of silently dropping them.
+  `fviz_pca_var()` / `fviz_pca_biplot()` now draw a FactoMineR PCA's
+  supplementary quantitative variables, which were previously omitted because the
+  wrong result slot was read; their names are also recognised by the selection
+  validation, so a `select.*` list naming one no longer warns or silently drops
+  it. `select.ind` now also
+  limits MFA/HMFA partial-point and segment overlays, including union selections,
+  instead of leaving every individual's partial geometry visible. A lone
+  unavailable contribution condition wrapped in `union = TRUE` now gives the
+  same explicit unavailable-metric error as the ordinary single-condition path.
+  Thanks to @erdeyl (#274).
+
 # factoextra 2.1.0
 
 ## New features

@@ -9,13 +9,13 @@ NULL
 #'  "text"). Use "point" (to show only points); "text" to show only labels; 
 #'  c("point", "text") or c("arrow", "text") to show both types.
 #'@param label a text specifying the elements to be labelled. Default value is 
-#'  "all". Allowed values are "none" or the combination of c("ind", "ind.sup", 
+#'  "all". Allowed values are "all", "none", or a combination of c("ind", "ind.sup",
 #'  "quali", "var", "quanti.sup", "group.sup"). "ind" can be used to label only 
 #'  active individuals. "ind.sup" is for supplementary individuals. "quali" is 
 #'  for supplementary qualitative variables. "var" is for active variables. 
 #'  "quanti.sup" is for quantitative supplementary variables.
 #'@param invisible a text specifying the elements to be hidden on the plot. 
-#'  Default value is "none". Allowed values are the combination of c("ind", 
+#'  Default value is "none". Allowed values are "all", "none", or a combination of c("ind",
 #'  "ind.sup", "quali", "var", "quanti.sup", "group.sup").
 #'@param labelsize font size for the labels
 #'@param pointsize the size of points
@@ -24,8 +24,8 @@ NULL
 #'@param arrow.linetype linetype of the variable arrows (e.g. "solid",
 #'  "dashed", "dotted"). Default is "solid".
 #'@param title the title of the graph
-#'@param repel a boolean, whether to use ggrepel to avoid overplotting text
-#'  labels or not. The old \code{jitter} argument is kept for backward
+#'@param repel logical; whether to use ggrepel to avoid overplotting text
+#'  labels. The old \code{jitter} argument is kept for backward
 #'  compatibility and is converted to \code{repel = TRUE} with a deprecation warning.
 #'@param habillage an optional factor variable for coloring the observations by 
 #'  groups. Default value is "none". If X is a PCA object from FactoMineR 
@@ -72,8 +72,8 @@ NULL
 #'  \code{fviz_pca_var}, \code{fviz_pca_biplot}).
 #'@param axes.linetype linetype of x and y axes.
 #'@param color color to be used for the specified geometries (point, text). Can 
-#'  be a continuous variable or a factor variable. Possible values include also 
-#'  : "cos2", "contrib", "coord", "x" or "y". In this case, the colors for 
+#'  be a continuous variable or a factor variable. Possible values also include
+#'  "cos2", "contrib", "coord", "x", and "y". In this case, the colors for
 #'  individuals/variables are automatically controlled by their qualities of 
 #'  representation ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, 
 #'  "coord"), x values ("x") or y values ("y"). To use automatic coloring (by 
@@ -81,8 +81,8 @@ NULL
 #'@param fill same as the argument \code{color}, but for point fill color. 
 #'  Useful when pointshape = 21, for example.
 #'@param alpha controls the transparency of individual and variable colors, 
-#'  respectively. The value can variate from 0 (total transparency) to 1 (no 
-#'  transparency). Default value is 1. Possible values include also : "cos2", 
+#'  respectively. The value can vary from 0 (total transparency) to 1 (no
+#'  transparency). Default value is 1. Possible values also include "cos2",
 #'  "contrib", "coord", "x" or "y". In this case, the transparency for the 
 #'  individual/variable colors are automatically controlled by their qualities 
 #'  ("cos2"), contributions ("contrib"), coordinates (x^2+y^2, "coord"), x 
@@ -94,10 +94,30 @@ NULL
 #'  \item name: is a character vector containing individuals/variables to be 
 #'  drawn \item cos2: if cos2 is in [0, 1], ex: 0.6, then individuals/variables 
 #'  with a cos2 > 0.6 are drawn. if cos2 > 1, ex: 5, then the top 5 
-#'  individuals/variables with the highest cos2 are drawn. \item contrib: if 
-#'  contrib > 1, ex: 5,  then the top 5 individuals/variables with the highest 
-#'  contrib are drawn }
+#'  individuals/variables with the highest cos2 are drawn. \item contrib: if
+#'  contrib > 1, ex: 5,  then the top 5 individuals/variables with the highest
+#'  contrib are drawn \item union: logical. When several of name/cos2/contrib
+#'  are given, FALSE (default) combines them with AND (each condition further
+#'  narrows the selection); TRUE combines them with OR (an element is kept if it
+#'  matches any condition), e.g. named items \emph{plus} the top-cos2 ones. }
 #'@param ggp a ggplot. If not NULL, points are added to an existing plot.
+#'@param max.points integer or NULL. When the individual / row / column cloud has
+#'  more than \code{max.points} points, a random subset of that many \emph{points}
+#'  is drawn so the plot stays readable (usable labels instead of an over-plotted
+#'  cloud). Only the drawn points/labels are thinned: any ellipse
+#'  (\code{addEllipses}) and the group mean point are still computed on the
+#'  \strong{full} data, so a convex / confidence frame is not shrunk or inflated by
+#'  the draw. When points are coloured/split by a group (e.g. \code{habillage}),
+#'  the draw is \strong{stratified} so every group keeps at least a minimum number
+#'  of points and none is decimated. When colour, fill or size is mapped to a
+#'  continuous metric (e.g. \code{col.ind = "cos2"}), its scale and legend are
+#'  pinned to the full-data range, so a point's colour, fill and size do not depend
+#'  on how many points are drawn. A message reports how many points are shown. The
+#'  subset is reproducible
+#'  (see \code{sample.seed}) and does not change the caller's random stream.
+#'  \code{NULL} (default) draws every point.
+#'@param sample.seed the random seed used to pick the \code{max.points} subset,
+#'  for a reproducible figure. Ignored when \code{max.points} is \code{NULL}.
 #'@inheritParams ggpubr::ggpar
 #'@param font.family character vector specifying font family.
 #'@param ... Arguments to be passed to the functions ggpubr::ggscatter() & 
@@ -153,6 +173,7 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
                           rotate.labels = FALSE,
                           ggtheme = theme_minimal(),
                           ggp = NULL, font.family = "",
+                          max.points = NULL, sample.seed = 123,
                            ...)
   {
   
@@ -201,8 +222,21 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   if(element == "partial.axes" || (element == "quali.var" && facto.class == "HMFA")) 
     summary.res <- c("coord", "contrib")
   else if(element == "group" && facto.class == "HMFA") summary.res <- "coord"
+  if(inherits(X, "factoextra_pca")){
+    available <- get_pca(X, element)
+    summary.res <- summary.res[!vapply(
+      summary.res, function(metric) is.null(available[[metric]]), logical(1)
+    )]
+  }
   df <- facto_summarize(X, element = element, axes = axes, result = summary.res)
   colnames(df)[2:3] <-  c("x", "y")
+  uses_missing_cos2 <- function(value){
+    is.character(value) && length(value) == 1L && identical(value, "cos2") &&
+      !("cos2" %in% names(df))
+  }
+  if(any(vapply(list(color, fill, alpha, pointsize),
+                uses_missing_cos2, logical(1))))
+    stop("`cos2` is not available for element = '", element, "'.", call. = FALSE)
   # Color by grouping variables
   #::::::::::::::::::::::::::::::::::::::
   is_grouping_var_exists <- !("none" %in% habillage) || .is_grouping_var(color) || .is_grouping_var(fill)
@@ -257,13 +291,48 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   }
   # Selection
   df.all <- df
+  # Resolve supplementary elements before validating selection names so a name
+  # that belongs only to a supplementary point is not reported as a typo.
+  esup <- .define_element_sup(
+    X, element, geom = geom, lab = lab, hide = hide,
+    col.row.sup = col.row.sup, col.col.sup = col.col.sup, ...
+  )
   if(!is.null(select) && !is.null(select$name) && .factominer_needs_category_map(facto.class, element)){
     select$name <- map_factominer_legacy_names(X, select$name, element = element)
   }
-  if(!is.null(select) && !is.null(select$contrib) && !("contrib" %in% colnames(df))){
-    stop("Contributions are not available for element = '", element, "'.")
+  if(!is.null(select) && !is.null(select$name)){
+    valid_selection_names <- as.character(df$name)
+    if(!is.null(esup$name)){
+      for(sup_element in esup$name){
+        sup_data <- tryCatch(
+          .get_supp(X, element = sup_element, axes = axes, result = "coord"),
+          error = function(e) NULL
+        )
+        if(!is.null(sup_data))
+          valid_selection_names <- c(valid_selection_names,
+                                     as.character(sup_data$name))
+      }
+    }
+    unmatched <- unique(setdiff(as.character(select$name),
+                                unique(valid_selection_names)))
+    if(length(unmatched))
+      warning("Selection name(s) not found: ",
+              paste0('"', unmatched, '"', collapse = ", "), ".",
+              call. = FALSE)
   }
-  if(!is.null(select)) df <- .select(df, select)
+  if(!is.null(select) && !is.null(select$cos2) && !("cos2" %in% colnames(df)))
+    stop("Cos2 is not available for element = '", element, "'.", call. = FALSE)
+  n_select_conditions <- if(is.null(select)) 0L else
+    sum(!is.null(select$name), !is.null(select$cos2), !is.null(select$contrib))
+  union_has_alternative <- !is.null(select) && isTRUE(select$union) &&
+    n_select_conditions >= 2L
+  if(!is.null(select) && !is.null(select$contrib) && !("contrib" %in% colnames(df))
+     && !union_has_alternative){
+    stop("Contributions are not available for element = '", element, "'.",
+         call. = FALSE)
+  }
+  if(!is.null(select))
+    df <- .select(df, select, warn_unmatched = FALSE)
   
   # Special cases: data transformation
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -272,8 +341,35 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
     df[, c("x", "y")] <- df[, c("x", "y")]*extra_args$scale.
   # (M)CA: scale coords according to the type of map
   if(facto.class %in% c("CA", "MCA") && !(element %in% c("mca.cor", "quanti.sup"))){
-  if(!is.null(extra_args$map)) df <- .scale_ca(df, res.ca = X,  element = element, 
+  if(!is.null(extra_args$map)) df <- .scale_ca(df, res.ca = X,  element = element,
                                                type = extra_args$map, axes = axes)
+  }
+  # Downsample a very large point cloud so the plot stays readable (usable labels
+  # and ellipses instead of an over-plotted blob). max.points = NULL (default)
+  # keeps every point, so existing calls are byte-identical. Only the individual /
+  # row / column clouds are subsettable, and the draw is seeded + RNG-safe so the
+  # subset is reproducible without perturbing the caller's random stream.
+  # `df` is kept at full size here; when sampling is requested we record the
+  # subset in `sampled_idx` and thin only the drawn point/text layers AFTER the
+  # plot is built (below). The ellipse and group mean point are then computed by
+  # ggscatter on the full data, so a convex / confidence frame is not shrunk or
+  # inflated by dropping the extreme points (or the count) a random draw perturbs.
+  sampled_idx <- NULL
+  if(!is.null(max.points) && element %in% c("ind", "row", "col")){
+    max.points <- .coerce_integerish(max.points, "max.points", lower = 1L)
+    if(nrow(df) > max.points){
+      # When points are coloured by a group (habillage / col.ind factor), that
+      # grouping column now lives in `color` (e.g. the quali var name, "Col." or
+      # "Groups"). Stratify on it so a small group keeps its floor and its ellipse
+      # stays meaningful; continuous colouring (cos2/contrib) is not a grouping.
+      grp_col <- if(is.character(color) && length(color) == 1L && color %in% names(df) &&
+                    .is_grouping_var(df[[color]])) color
+                 else if("Groups" %in% names(df)) "Groups" else NULL
+      grps <- if(!is.null(grp_col)) df[[grp_col]] else NULL
+      sampled_idx <- .sample_indices(nrow(df), max.points, groups = grps, seed = sample.seed)
+      message("Showing a random ", length(sampled_idx), " of ", nrow(df),
+              " points (max.points); set max.points = NULL to show all.")
+    }
   }
   # Main plot
   #%%%%%%%%%%%%%%%%%%%
@@ -330,10 +426,42 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   if(isTRUE(rotate.labels) && "arrow" %in% geom)
     p <- .rotate_text_labels(p, n_layers_before)
 
+  # Thin only the drawn scatter/labels to the sampled subset; the group mean point
+  # (StatMean) and ellipse (StatEllipse / StatChull polygon) added by the ggscatter
+  # call above keep their full-data layers, so the frame stays faithful. Only this
+  # element's layers (index > n_layers_before) are touched, so chained biplot
+  # layers and supplementary points (added later) are left intact.
+  if(!is.null(sampled_idx)){
+    sub <- df[sampled_idx, , drop = FALSE]
+    for(i in seq_along(p$layers)){
+      if(i <= n_layers_before) next
+      g <- p$layers[[i]]$geom; s <- p$layers[[i]]$stat
+      is_point <- inherits(g, "GeomPoint") && inherits(s, "StatIdentity")
+      is_text  <- inherits(g, c("GeomText", "GeomLabel", "GeomTextRepel", "GeomLabelRepel"))
+      if(is_point || is_text) p$layers[[i]]$data <- sub
+    }
+  }
+
   if(!is.null(gradient.cols))
     p <- p + ggpubr::gradient_color(gradient.cols)
-    
-    
+
+  # When max.points has thinned the drawn points (sampled_idx set), pin every
+  # continuous aesthetic (colour / fill / size) to the full-data range, so its
+  # scale and legend do not retrain on the drawn subset and a point's colour, fill
+  # and size do not depend on how many points were drawn. expand_limits only widens
+  # the existing scale (subset range is a subset of the full range), so a custom
+  # gradient.cols palette is preserved. Uses `df` (the post-select, post-CA-scale,
+  # still un-thinned set that would be plotted at max.points = NULL) so the range
+  # matches the non-sampled plot exactly under select.ind / a rescaled CA map --
+  # the layer-swap above thins only the drawn layers' data, never `df` itself.
+  # Gated on the sampling path and on a continuous mapping, so default plots and
+  # discrete / fixed aesthetics are byte-identical.
+  if(!is.null(sampled_idx)){
+    p <- .pin_full_range(p, "colour", color, df)
+    p <- .pin_full_range(p, "fill", fill, df)
+    p <- .pin_full_range(p, "size", pointsize, df)
+  }
+
   if(is.null(extra_args$legend)) p <- p + theme(legend.position = "right" )
   # Add arrows
   if("arrow" %in% geom && !hide[[element]])
@@ -372,8 +500,6 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   # Supplementary elements: available only for FactoMineR
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   scale. <- ifelse(is.null(extra_args$scale.), 1, extra_args$scale.)
-  esup <- .define_element_sup(X, element, geom = geom, lab = lab, hide = hide,
-                              col.row.sup = col.row.sup, col.col.sup = col.col.sup,...) 
   ca_map = extra_args$map
   if(element == "mca.cor") ca_map = NULL
   
@@ -394,6 +520,21 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
 # Helper functions
 #+++++++++++++++++++++
 
+
+# Pin a continuous aesthetic (colour / fill / size) to the full-data range so a
+# max.points subsample does not retrain its scale/legend on the drawn subset.
+# `var` is the mapped column name (or a fixed value like "black"/1.5); the pin
+# only applies when it names a numeric column of `data`. expand_limits() widens
+# the existing scale without replacing the palette.
+.pin_full_range <- function(p, aes, var, data){
+  if(is.character(var) && length(var) == 1L && var %in% names(data) &&
+     is.numeric(data[[var]])){
+    lim <- suppressWarnings(range(data[[var]], na.rm = TRUE))
+    if(all(is.finite(lim)))   # skip an all-NA metric (range -> c(Inf, -Inf))
+      p <- p + do.call(expand_limits, stats::setNames(list(lim), aes))
+  }
+  p
+}
 
 # Check if fill/color variable is continous in the context of PCA
 .is_continuous_var <- function(x){
@@ -476,6 +617,64 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   
 }
 
+# Overlay the supplementary quantitative variables of an MCA as scaled
+# correlation arrows on an individual / category map.
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# MCA supplementary quantitative variables are summarized by their correlation
+# with each dimension (X$quanti.sup$coord, signed, in [-1, 1]). factoextra's
+# standalone quanti.sup plot lives in the squared-correlation [0, 1] space, so it
+# is NOT reused here: for a biplot overlay we draw the RAW signed correlations as
+# arrows from the origin, scaled with the same convention as fviz_pca_biplot()
+# (longest arrow ~ 80% of the individual-cloud extent) so directions read against
+# the cloud. Arrow lengths are therefore relative.
+.add_mca_quanti_sup <- function(p, X, axes = c(1, 2), col = "#D55E00",
+                                geom = c("arrow", "text"), labelsize = 4,
+                                arrowsize = 0.5, repel = TRUE){
+  if(!inherits(X, "MCA") || is.null(X$quanti.sup)){
+    warning("quanti.sup = TRUE: no supplementary quantitative variables found ",
+            "(needs a FactoMineR MCA fitted with quanti.sup). Skipping the overlay.",
+            call. = FALSE)
+    return(p)
+  }
+  qs <- X$quanti.sup$coord[, axes, drop = FALSE]   # signed correlations in [-1, 1]
+  if(all(is.na(qs)) || suppressWarnings(max(abs(qs), na.rm = TRUE)) == 0) return(p)
+  # Cloud extent from the built plot, so scaling is correct for every `map` mode
+  # (e.g. colprincipal rescales the individuals). Arrow length is proportional to
+  # the |correlation|: a correlation of 1 reaches ~80% of the cloud extent, so a
+  # weak covariate draws a short arrow (length is honest, not normalised to 1).
+  rng <- tryCatch({
+    b <- ggplot2::ggplot_build(p)
+    max(abs(c(b$layout$panel_params[[1]]$x.range,
+              b$layout$panel_params[[1]]$y.range)), na.rm = TRUE)
+  }, error = function(e) max(abs(X$ind$coord[, axes]), na.rm = TRUE))
+  sf <- 0.8 * rng
+  df <- data.frame(name = rownames(qs),
+                   x = qs[, 1] * sf, y = qs[, 2] * sf,
+                   stringsAsFactors = TRUE)
+  if("arrow" %in% geom)
+    p <- p + .arrows(data = df, color = col, linewidth = arrowsize)
+  if("text" %in% geom){
+    # Place each label just BEYOND its arrow tip (a small fixed nudge along the
+    # arrow direction), so the arrow/head does not run through the text. A tiny
+    # arrow at the origin keeps its label in place (unit direction is ~0).
+    len <- sqrt(df$x^2 + df$y^2)
+    gap <- 0.06 * rng
+    df$lx <- df$x + ifelse(len > 0, df$x / len, 0) * gap
+    df$ly <- df$y + ifelse(len > 0, df$y / len, 0) * gap
+    # Repel the overlay labels by default: an MCA usually has a dominant first
+    # axis, so several arrows align and their tip labels would otherwise overprint.
+    if(isTRUE(repel) && requireNamespace("ggrepel", quietly = TRUE))
+      p <- p + ggpubr::geom_exec(ggrepel::geom_text_repel, data = df,
+                                 x = "lx", y = "ly", label = "name",
+                                 color = col, fontface = "italic", size = labelsize)
+    else
+      p <- p + ggpubr::geom_exec(geom_text, data = df, x = "lx", y = "ly",
+                                 label = "name", color = col,
+                                 fontface = "italic", size = labelsize)
+  }
+  p + labs(caption = "Arrows: supplementary quantitative variables (relative lengths)")
+}
+
 # Add arrow to the plot
 # FIX: ggplot2 3.4.0+ deprecation - size replaced with linewidth for geom_segment
 .arrows <- function(data, color = "black", alpha = 1, linewidth = 0.5,
@@ -508,7 +707,8 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
     res <- list(name = "ind.sup", addlabel = (lab$ind.sup && "text" %in% geom))
   # Supplementary quantitative variables
   else if(element == "var" && inherits(X, "PCA") && !hide$quanti.sup)
-    res <- list(name = "quanti", addlabel = (lab$quanti.sup && "text" %in% geom))
+    res <- list(name = "quanti.sup",
+                addlabel = (lab$quanti.sup && "text" %in% geom))
   else if(element == "mca.cor" && inherits(X, "MCA") && !hide$quanti)
     res <- list(name = c("quanti.sup", "quali.sup$eta2"), addlabel = (lab$quanti && "text" %in% geom))
   else if(element %in% "var" && inherits(X, "MCA") && !hide$quali.sup)
@@ -522,7 +722,7 @@ fviz <- function(X, element, axes = c(1, 2), geom = "auto",
   # CA
   else if(element == "row" && inherits(X, c("CA", "ca")) && !hide$row.sup)
     res <- list(name = "row.sup", addlabel = (lab$row.sup && "text" %in% geom))
-  else if(element == "col" && inherits(X, c("CA", "ca")) && !hide$row.sup)
+  else if(element == "col" && inherits(X, c("CA", "ca")) && !hide$col.sup)
     res <- list(name = "col.sup", addlabel = (lab$col.sup && "text" %in% geom))
   else if(element == "group" && inherits(X, "MFA") && !hide$group.sup)
     res <- list(name = "group", addlabel = (lab$group.sup && "text" %in% geom))

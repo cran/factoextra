@@ -7,36 +7,32 @@ Downloads](https://cranlogs.r-pkg.org/badges/grand-total/factoextra?color=orange
 [![Project Status: Active - The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Pending
-Pull-Requests](https://githubbadges.herokuapp.com/kassambara/factoextra/pulls.svg?style=flat)](https://github.com/kassambara/factoextra/pulls)
-[![Github
-Issues](https://githubbadges.herokuapp.com/kassambara/factoextra/issues.svg)](https://github.com/kassambara/factoextra/issues)
 
-# factoextra : Extract and Visualize the Results of Multivariate Data Analyses
+# factoextra : Extract and Visualize the Results of Multivariate Data Analyses <img src="man/figures/logo.png" align="right" height="139" alt="factoextra hex logo" />
 
 [**factoextra**](https://rpkgs.datanovia.com/factoextra/index.html) is
 an R package that makes it easy to *extract* and *visualize* the output
 of exploratory **multivariate data analyses**, including:
 
 1.  [Principal Component Analysis
-    (PCA)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/),
+    (PCA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis),
     which is used to summarize the information contained in continuous
     (i.e., quantitative) multivariate data by reducing the
     dimensionality of the data without losing important information.
 
 2.  [Correspondence Analysis
-    (CA)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/113-ca-correspondence-analysis-in-r-essentials/),
+    (CA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/correspondence-analysis),
     which is an extension of principal component analysis suited to
     analyzing a large contingency table formed by two *qualitative
     variables* (or categorical data).
 
 3.  [Multiple Correspondence Analysis
-    (MCA)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/),
+    (MCA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-correspondence-analysis),
     which is an adaptation of CA to a data table containing more than
     two categorical variables.
 
 4.  [Multiple Factor Analysis
-    (MFA)](https://rpkgs.datanovia.com/factoextra/reference/fviz_mfa.html)
+    (MFA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-factor-analysis)
     dedicated to datasets where variables are organized into groups
     (qualitative and/or quantitative variables).
 
@@ -46,7 +42,7 @@ of exploratory **multivariate data analyses**, including:
     a hierarchical structure.
 
 6.  [Factor Analysis of Mixed Data
-    (FAMD)](https://rpkgs.datanovia.com/factoextra/reference/fviz_famd.html),
+    (FAMD)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/factor-analysis-of-mixed-data),
     a particular case of the MFA, dedicated to analyze a data set
     containing both quantitative and qualitative variables.
 
@@ -76,7 +72,7 @@ The figure below shows methods whose outputs can be visualized using the
 factoextra package. The official online documentation is available at:
 <https://rpkgs.datanovia.com/factoextra/index.html>.
 
-![factoextra R package](tools/factoextra-r-package.png)
+![factoextra R package](man/figures/factoextra-r-package.png)
 
 ## Why using factoextra?
 
@@ -101,7 +97,7 @@ provides a convenient solution.</span>
     and qualitative) and supplementary individuals using the information
     provided by the previously performed PCA or (M)CA. This can be done
     easily using the
-    [FactoMineR](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
+    [FactoMineR](https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis)
     package.
 
 <span class="success">If you want to make predictions with PCA/MCA and
@@ -168,45 +164,55 @@ The current maintenance baseline targets:
 library("factoextra")
 ```
 
-## Recent maintenance highlights
+## What’s new in the development version
 
-The current development version includes:
-
-  - helper-level `k = 1` handling for clustering diagnostics such as
-    `fviz_nbclust(..., method = "wss")` and hierarchical `eclust()`
-    auto-selection
-  - silhouette diagnostics now omit the undefined `k = 1` point and keep
-    the optimal-k guide aligned with the displayed cluster count
-  - stricter validation for scaled clustering data and non-finite
-    distance objects
-  - clearer MCA `quanti.sup`, `axes`, `ncp`, and `parallel.iter`
-    validation paths, including integer-like numeric support for
-    `fviz_eig()`
-  - refreshed examples and manuals for the updated clustering and
-    validation workflows
+  - **tidymodels on-ramp**: a PCA fitted in a `recipes` recipe
+    (`step_pca()`) or a fitted `workflow` plots directly with the
+    `fviz_pca_*` family via `as_factoextra_pca()` (honest scree, real
+    variable-component correlations)
+  - **UMAP / t-SNE**: `fviz_umap()` and `fviz_tsne()` visualize a 2-D
+    embedding (from `uwot`, `Rtsne`, `umap`, or a coordinate matrix),
+    including colouring by a continuous feature value; axes carry no
+    percentage and there is no scree/loadings surface (embeddings have no
+    eigenvalues). Read more:
+    [UMAP](https://www.datanovia.com/learn/machine-learning/dimension-reduction/umap)
+    and
+    [t-SNE](https://www.datanovia.com/learn/machine-learning/dimension-reduction/t-sne)
+  - **Themes and palettes**: `theme_factoextra()` (a clean publication
+    theme) and `factoextra_palette("okabe")` (the Okabe-Ito
+    colorblind-safe palette), both explicit and stateless
+  - **Large datasets**: a `max.points` argument on the individual/cluster
+    plots draws a readable subset while keeping ellipses/centres on the
+    full data
+  - **`display = "heatmap"`** for `fviz_cos2()` / `fviz_contrib()` reads
+    the quality/contribution across several dimensions at once
+  - **`fviz_dend(highlight = ...)`** emphasizes the branches leading to
+    specific leaves
+  - **`fviz_mca_ind(..., quanti.sup = TRUE)`** overlays supplementary
+    quantitative variables on an MCA map
 
 <!-- end list -->
 
 ``` r
-data(iris)
-iris.scaled <- scale(iris[, -5])
-res.pca <- prcomp(iris[, -5], scale = TRUE)
+# tidymodels PCA -> factoextra
+library(recipes)
+rec <- recipe(~ ., data = iris[, 1:4]) |>
+  step_normalize(all_numeric_predictors()) |>
+  step_pca(all_numeric_predictors(), num_comp = 4)
+prep(rec) |> as_factoextra_pca() |> fviz_pca_biplot(habillage = iris$Species)
 
-# WSS now computes the k = 1 baseline internally
-fviz_nbclust(iris.scaled, hcut, method = "wss", hc_method = "complete")
+# UMAP embedding, coloured by a feature value, with the house theme + palette
+um <- uwot::umap(iris[, 1:4])
+fviz_umap(um, habillage = iris$Species, addEllipses = TRUE,
+          palette = factoextra_palette("okabe"), ggtheme = theme_factoextra())
+fviz_umap(um, col.ind = iris$Petal.Length)   # colour by a continuous feature
 
-# Parallel analysis validation is explicit and reproducible
-fviz_eig(res.pca, choice = "eigenvalue", parallel = TRUE,
-         parallel.iter = 10, parallel.seed = 123)
-
-# FactoMineR MCA quantitative supplementary variables are supported directly
-library(FactoMineR)
-data(poison)
-res.mca <- MCA(poison, quanti.sup = 1:2, graph = FALSE)
-get_mca(res.mca, "quanti.sup")
-
-# If installation leaves stale 00LOCK-* directories in your library,
-# remove those directories manually before reinstalling.
+# cos2 across several dimensions as a heatmap; large-n scatter; branch highlight
+res.pca <- prcomp(iris[, -5], scale. = TRUE)
+fviz_cos2(res.pca, choice = "var", axes = 1:3, display = "heatmap")
+fviz_pca_ind(res.pca, geom = "point", max.points = 200)
+fviz_dend(hclust(dist(scale(USArrests))), k = 4,
+          highlight = c("California", "Texas", "New York"))
 ```
 
 ## Main functions in the factoextra package
@@ -229,6 +235,7 @@ list.</span>
 | *fviz\_ellipses*                  | Draw confidence ellipses around the categories.                                                                                           |
 | *fviz\_cos2*                      | Visualize the quality of representation of the row/column variable from the results of PCA, CA, MCA functions.                            |
 | *fviz\_contrib*                   | Visualize the contributions of row/column elements from the results of PCA, CA, MCA functions.                                            |
+| *fviz\_umap*(fviz\_tsne)          | Visualize a 2-D UMAP / t-SNE embedding (no eigenvalues; from *uwot*, *Rtsne*, *umap* or a coordinate matrix).                             |
 
 ### Extracting data from dimension reduction analysis outputs
 
@@ -242,6 +249,7 @@ list.</span>
 | *get\_famd*        | Extract results from *Factor Analysis of Mixed Data* outputs, including supplementary qualitative categories.                                                |
 | *get\_hmfa*        | Extract results from *Hierarchical Multiple Factor Analysis* outputs.                                                                                        |
 | *facto\_summarize* | Subset and summarize the output of factor analyses.                                                                                                          |
+| *as\_factoextra\_pca* | Build a fviz-ready object from pre-computed coordinates, a tidymodels `recipe`/`workflow` (`step_pca()`), or any eigenvalue-based dimension reduction.       |
 
 ### Clustering analysis and visualization
 
@@ -258,13 +266,25 @@ list.</span>
 | *hkmeans* (hkmeans\_tree, print.hkmeans) | Hierarchical k-means clustering.                            |
 | *eclust*                                 | Visual enhancement of clustering analysis                   |
 
+### Themes and color palettes
+
+| Functions            | Description                                                             |
+| -------------------- | ---------------------------------------------------------------------- |
+| *theme\_factoextra*  | A clean publication theme for factoextra plots (via `ggtheme` or `+`). |
+| *factoextra\_palette* | Colorblind-safe categorical colors (Okabe-Ito) for the `palette` argument. |
+
+Read more: [ggplot2 Themes in
+R](https://www.datanovia.com/learn/data-visualization/ggplot2/themes) and
+[ggplot2 Colours in
+R](https://www.datanovia.com/learn/data-visualization/ggplot2/colors).
+
 ## Dimension reduction and factoextra
 
 As depicted in the figure below, the type of analysis to be performed
 depends on the data set formats and structures.
 
 ![dimension reduction and
-factoextra](tools/multivariate-analysis-factoextra.png)
+factoextra](man/figures/multivariate-analysis-factoextra.png)
 
 In this section we start by illustrating classical methods - such as
 PCA, CA and MCA - for analyzing a data set containing continuous
@@ -287,7 +307,7 @@ qualitative and quantitative variables.
 
 <span class="success">Read more about computing and interpreting
 principal component analysis at: [**Principal Component Analysis**
-(PCA)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/).</span>
+(PCA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis).</span>
 
 1.  **Loading data**
 
@@ -297,7 +317,7 @@ principal component analysis at: [**Principal Component Analysis**
 library("factoextra")
 #> Loading required package: ggplot2
 #> Welcome to factoextra!
-#> Want to learn more? See two factoextra-related books at https://www.datanovia.com/en/product/practical-guide-to-principal-component-methods-in-r/
+#> Want to learn more? See two factoextra-related books at https://www.datanovia.com/library/principal-component-methods
 data("decathlon2")
 df <- decathlon2[1:23, 1:10]
 ```
@@ -333,7 +353,7 @@ get_eig(res.pca)
 fviz_screeplot(res.pca, addlabels = TRUE, ylim = c(0, 50))
 ```
 
-![](tools/README-pca-eigenvalue-1.png)<!-- -->
+![](man/figures/README-pca-eigenvalue-1.png)<!-- -->
 
 4\.**Extract and visualize results for variables**:
 
@@ -370,7 +390,7 @@ head(var$contrib)
 fviz_pca_var(res.pca, col.var = "black")
 ```
 
-![](tools/README-pca-variables-1.png)<!-- -->
+![](man/figures/README-pca-variables-1.png)<!-- -->
 
 It’s possible to control variable colors using their contributions
 (“contrib”) to the principal axes:
@@ -383,7 +403,7 @@ fviz_pca_var(res.pca, col.var="contrib",
              )
 ```
 
-![](tools/README-pca-variable-colors-by-contributions-1.png)<!-- -->
+![](man/figures/README-pca-variable-colors-by-contributions-1.png)<!-- -->
 
 5.  **Variable contributions to the principal axes**:
 
@@ -397,7 +417,7 @@ fviz_contrib(res.pca, choice = "var", axes = 1, top = 10)
 fviz_contrib(res.pca, choice = "var", axes = 2, top = 10)
 ```
 
-![](tools/README-pca-variable-contributions-1.png)![](tools/README-pca-variable-contributions-2.png)
+![](man/figures/README-pca-variable-contributions-1.png)![](man/figures/README-pca-variable-contributions-2.png)
 
 6.  **Extract and visualize results for individuals**:
 
@@ -434,14 +454,14 @@ fviz_pca_ind(res.pca, col.ind = "cos2",
              )
 ```
 
-![](tools/README-principal-component-analysis-data-mining-1.png)<!-- -->
+![](man/figures/README-principal-component-analysis-data-mining-1.png)<!-- -->
 
 ``` r
 # Biplot of individuals and variables
 fviz_pca_biplot(res.pca, repel = TRUE)
 ```
 
-![](tools/README-principal-component-analysis-data-mining-2.png)<!-- -->
+![](man/figures/README-principal-component-analysis-data-mining-2.png)<!-- -->
 
 7.  **Color individuals by groups**:
 
@@ -463,7 +483,7 @@ fviz_pca_ind(iris.pca,
              )
 ```
 
-![](tools/README-individuals-factor-map-color-by-groups-1.png)<!-- -->
+![](man/figures/README-individuals-factor-map-color-by-groups-1.png)<!-- -->
 
 ### Correspondence analysis
 
@@ -473,7 +493,7 @@ fviz_pca_ind(iris.pca,
 
 <span class="success">Read more about computing and interpreting
 correspondence analysis at: [**Correspondence Analysis**
-(CA)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/113-ca-correspondence-analysis-in-r-essentials/).</span>
+(CA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/correspondence-analysis).</span>
 
   - **Compute CA**:
 
@@ -508,7 +528,7 @@ get_ca_col(res.ca)
 fviz_ca_biplot(res.ca, repel = TRUE)
 ```
 
-![](tools/README-correspondence-analysis-biplot-1.png)<!-- -->
+![](man/figures/README-correspondence-analysis-biplot-1.png)<!-- -->
 
 To visualize only row points or column points, type this:
 
@@ -535,7 +555,7 @@ fviz_contrib(res.ca, choice ="col", axes = 1)
 <span class="success">Read more about computing and interpreting
 multiple correspondence analysis at: [**Multiple Correspondence
 Analysis**
-(MCA)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/).</span>
+(MCA)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-correspondence-analysis).</span>
 
 1.  **Computing MCA**:
 
@@ -586,7 +606,7 @@ fviz_mca_ind(res.mca,  habillage = grp,
              addEllipses = TRUE, repel = TRUE)
 ```
 
-![](tools/README-mca-graph-of-individuals-1.png)<!-- -->
+![](man/figures/README-mca-graph-of-individuals-1.png)<!-- -->
 
 5.  **Graph of variable categories**:
 
@@ -596,7 +616,7 @@ fviz_mca_ind(res.mca,  habillage = grp,
 fviz_mca_var(res.mca, repel = TRUE)
 ```
 
-![](tools/README-mca-graph-variables-1.png)<!-- -->
+![](man/figures/README-mca-graph-variables-1.png)<!-- -->
 
 6.  **Biplot of individuals and variables**:
 
@@ -606,29 +626,29 @@ fviz_mca_var(res.mca, repel = TRUE)
 fviz_mca_biplot(res.mca, repel = TRUE)
 ```
 
-![](tools/README-mca-biplot-1.png)<!-- -->
+![](man/figures/README-mca-biplot-1.png)<!-- -->
 
 ### Advanced methods
 
 The factoextra R package has also functions that support the
 visualization of advanced methods such:
 
-  - Factor Analysis of Mixed Data (FAMD): : [FAMD
-    Examples](https://rpkgs.datanovia.com/factoextra/reference/fviz_famd.html)
-  - Multiple Factor Analysis (MFA): [MFA
-    Examples](https://rpkgs.datanovia.com/factoextra/reference/fviz_mfa.html)
+  - Factor Analysis of Mixed Data (FAMD): [Factor Analysis of Mixed Data
+    (FAMD) in R](https://www.datanovia.com/learn/machine-learning/dimension-reduction/factor-analysis-of-mixed-data)
+  - Multiple Factor Analysis (MFA): [Multiple Factor Analysis (MFA) in
+    R](https://www.datanovia.com/learn/machine-learning/dimension-reduction/multiple-factor-analysis)
   - Hierarchical Multiple Factor Analysis (HMFA): [HMFA
     Examples](https://rpkgs.datanovia.com/factoextra/reference/fviz_hmfa.html)
-  - [Hierachical Clustering on Principal Components
-    (HCPC)](https://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/117-hcpc-hierarchical-clustering-on-principal-components-essentials/)
+  - [Hierarchical Clustering on Principal Components
+    (HCPC)](https://www.datanovia.com/learn/machine-learning/dimension-reduction/hcpc)
 
 ## Cluster analysis and factoextra
 
 To learn more about cluster analysis, you can refer to the book
 available at: [Practical Guide to Cluster Analysis in
-R](https://www.datanovia.com/en/product/practical-guide-to-cluster-analysis-in-r/)
+R](https://www.datanovia.com/library/cluster-analysis)
 
-<a href = "https://www.datanovia.com/en/product/practical-guide-to-cluster-analysis-in-r/"><img src = "tools/clustering-e1-cover.png" alt = "clustering book cover"/></a>
+<a href = "https://www.datanovia.com/library/cluster-analysis"><img src = "man/figures/clustering-e1-cover.png" alt = "clustering book cover"/></a>
 
 The main parts of the book include:
 
@@ -645,7 +665,7 @@ researchers.
 
 ### Partitioning clustering
 
-![Partitioning cluster analysis](tools/partitioning-clustering.png)
+![Partitioning cluster analysis](man/figures/partitioning-clustering.png)
 
 ``` r
 # 1. Loading and preparing data
@@ -665,7 +685,7 @@ fviz_cluster(km.res, data = df,
              )
 ```
 
-![](tools/README-partitioning-clustering-1.png)<!-- -->
+![](man/figures/README-partitioning-clustering-1.png)<!-- -->
 
 <br/>  
 
@@ -674,10 +694,10 @@ fviz_cluster(km.res, data = df,
 Read more:
 
 1.  [Cluster analysis in R: All what you should
-    know](https://www.datanovia.com/en/blog/types-of-clustering-methods-overview-and-quick-start-r-code/).
+    know](https://www.datanovia.com/learn/machine-learning/clustering/).
 
-2.  [Partitioning cluster
-    analysis](https://www.datanovia.com/en/courses/partitional-clustering-in-r-the-essentials/).
+2.  [K-means
+    clustering](https://www.datanovia.com/learn/machine-learning/clustering/kmeans).
 
 </div>
 
@@ -695,7 +715,7 @@ fviz_dend(res, rect = TRUE, cex = 0.5,
           k_colors = c("#00AFBB","#2E9FDF", "#E7B800", "#FC4E07"))
 ```
 
-![](tools/README-hierarchical-clustering-1.png)<!-- -->
+![](man/figures/README-hierarchical-clustering-1.png)<!-- -->
 
 ``` r
 if (requireNamespace("igraph", quietly = TRUE)) {
@@ -706,7 +726,7 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 }
 ```
 
-![](tools/README-hierarchical-clustering-phylogenic-1.png)<!-- -->
+![](man/figures/README-hierarchical-clustering-phylogenic-1.png)<!-- -->
 
 <br/>  
 
@@ -715,10 +735,10 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 Read more:
 
 1.  [Cluster analysis in R: All what you should
-    know](https://www.datanovia.com/en/blog/types-of-clustering-methods-overview-and-quick-start-r-code/)
+    know](https://www.datanovia.com/learn/machine-learning/clustering/)
 
 2.  [Hierarchical clustering
-    essentials](https://www.datanovia.com/en/courses/hierarchical-clustering-in-r-the-essentials/)
+    essentials](https://www.datanovia.com/learn/machine-learning/clustering/hierarchical-clustering)
 
 </div>
 
@@ -733,7 +753,14 @@ my_data <- scale(USArrests)
 fviz_nbclust(my_data, kmeans, method = "gap_stat")
 ```
 
-![](tools/README-determine-the-number-of-clusters-gap-statistics-1.png)<!-- -->
+![](man/figures/README-determine-the-number-of-clusters-gap-statistics-1.png)<!-- -->
+
+<br/>
+<div class="success">
+Read more: [Determining the Optimal Number of Clusters in
+R](https://www.datanovia.com/learn/machine-learning/clustering/optimal-clusters)
+</div>
+<br/>
 
 ## Acknowledgment
 

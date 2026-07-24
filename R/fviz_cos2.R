@@ -7,6 +7,9 @@ NULL
 #' Analysis (PCA), Correspondence Analysis (CA), Multiple Correspondence
 #' Analysis (MCA), Factor Analysis of Mixed Data (FAMD), Multiple Factor
 #' Analysis (MFA) and Hierarchical Multiple Factor Analysis (HMFA) functions.
+#'
+#' Read more: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis}{Principal Component Analysis (PCA) in R: Compute, Visualize & Interpret}.
+#'
 #' @param X an object of class PCA, CA, MCA, FAMD, MFA and HMFA [FactoMineR];
 #'   prcomp and princomp [stats]; dudi, pca, coa and acm [ade4]; ca [ca
 #'   package].
@@ -20,11 +23,22 @@ NULL
 #'   (for descending).
 #' @param top a numeric value specifying the number of top elements to be shown.
 #' @param xtickslab.rt rotation angle for x axis tick labels. Default is 45 degrees.
+#' @param display how to display the values. \code{"bar"} (default) draws the
+#'   usual barplot of the cos2/contribution summed over \code{axes}.
+#'   \code{"heatmap"} draws a grid with one tile per element and dimension,
+#'   filled by the per-dimension cos2/contribution and labelled with its value,
+#'   so several dimensions can be read at once. With \code{"heatmap"}, elements
+#'   are ordered by their (unweighted) total over the requested \code{axes} and
+#'   \code{top} keeps the leading ones; the bar-specific \code{sort.val} and
+#'   \code{color} arguments are ignored, and \code{fill} sets the high end of the
+#'   white-to-colour gradient.
 #' @inheritParams ggpubr::ggpar
 #'   
 #' @return a ggplot
 #' @author Alboukadel Kassambara \email{alboukadel.kassambara@@gmail.com}
-#' @references \url{https://www.sthda.com/english/}
+#' @references \url{https://www.datanovia.com/learn/}
+#' @seealso \code{\link{fviz_contrib}}, \code{\link{get_pca}}.
+#'   Online tutorial: \href{https://www.datanovia.com/learn/machine-learning/dimension-reduction/principal-component-analysis}{Principal Component Analysis (PCA) in R: Compute, Visualize & Interpret}.
 #' @examples
 #' \donttest{
 #' # Principal component analysis
@@ -42,7 +56,10 @@ NULL
 #'          
 #' # Variable cos2 on axes 1 + 2
 #' fviz_cos2(res.pca, choice="var", axes = 1:2)
-#' 
+#'
+#' # Heat-grid of cos2 across several dimensions
+#' fviz_cos2(res.pca, choice = "var", axes = 1:4, display = "heatmap")
+#'
 #' # cos2 of individuals on axis 1
 #' fviz_cos2(res.pca, choice="ind", axes = 1)
 #' 
@@ -87,13 +104,24 @@ NULL
 #'  }
 #' @export
 fviz_cos2 <- function(X, choice = c("row", "col", "var", "ind", "quanti.var", "quali.var", "group"), axes=1,
-                   fill="steelblue", color = "steelblue",  
-                   sort.val = c("desc", "asc", "none"), top = Inf, 
-                   xtickslab.rt = 45, ggtheme = theme_minimal(), ...)
+                   fill="steelblue", color = "steelblue",
+                   sort.val = c("desc", "asc", "none"), top = Inf,
+                   xtickslab.rt = 45, ggtheme = theme_minimal(),
+                   display = c("bar", "heatmap"), ...)
 {
    sort.val <- match.arg(sort.val)
+   display <- match.arg(display)
    title <- .build_title(choice[1], "Cos2", axes)
-  
+
+   # display = "heatmap": one tile per (element, dimension), instead of a bar
+   # of the cos2 summed over the axes. Barplot path below is unchanged.
+   if(display == "heatmap")
+     return(.fviz_result_heatmap(X, choice = choice[1], result = "cos2",
+                                 axes = axes, top = top, fill = fill,
+                                 ggtheme = ggtheme,
+                                 title = sub(" to Dim-.*$", " per dimension", title),
+                                 legend.title = "cos2"))
+
    dd <- facto_summarize(X, element = choice, result = "cos2", axes = axes)
    cos2 <- dd$cos2
    
